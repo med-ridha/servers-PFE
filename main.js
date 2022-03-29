@@ -2,7 +2,7 @@ import 'dotenv/config';
 import express from 'express'
 import firebase from './firebase/service.js'
 import mongoose from './database/mongoose.js'
-import user from './database/module/user.js'
+import userDao from './database/Dao/userDao.js'
 import path from 'path'
 let __dirname = path.resolve(path.dirname(''));
 
@@ -18,8 +18,9 @@ app.get("/", (req, res) => {
     res.sendFile("./client/notifications.html", { root: __dirname });
 })
 
-app.get("/user/:id", (req, res) => {
-    // get user by id
+app.post("/login", async (req, res) => {
+    let result = await userDao.login(req.body)
+    res.json(result)
 })
 
 app.post("/notification/push", async (req, res) => {
@@ -29,34 +30,8 @@ app.post("/notification/push", async (req, res) => {
 })
 
 app.post("/createUser", async (req, res) => {
-    //create user
-    let name = req.body.name;
-    let surname = req.body.surname;
-    let phoneNumber = req.body.phoneNumber;
-    let email = req.body.email;
-    let password = req.body.password;
-
-    (new user({
-        name: name,
-        surname: surname,
-        phoneNumber: phoneNumber,
-        email: email,
-        password: password
-    })).save()
-        .then(user => {
-            res.status(200).json({
-                "result": "ok",
-                "value": user
-            });
-        })
-        .catch((error) => {
-            console.error(error);
-            res.status(300).json({
-                "result": "error",
-                "value": error
-            });
-        });
-
+    let result = await userDao.createUser(req.body)
+    res.json(result);
 })
 
 app.post("/createDocument", async (req, res) => {
