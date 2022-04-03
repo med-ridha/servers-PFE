@@ -14,7 +14,7 @@ app.listen(PORT, () => {
     console.log(`listening on PORT ${PORT}`);
 })
 
-app.get("/", (req, res) => {
+app.get("/sendNotif", (req, res) => {
     res.sendFile("./client/notifications.html", { root: __dirname });
 })
 
@@ -23,9 +23,13 @@ app.post("/login", async (req, res) => {
     res.json(result)
 })
 
+app.post("/checktoken", async (req, res) => {
+    let result = await userDao.checkToken(req.body)
+    res.json(result)
+})
+
 app.post("/notification/push", async (req, res) => {
     await firebase.sendToTopic(req.body);
-
     res.json({ "res": "ok" });
 })
 

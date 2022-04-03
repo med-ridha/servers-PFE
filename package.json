@@ -16,6 +16,7 @@
     "express": "^4.17.3",
     "fcm-node": "^1.6.1",
     "firebase-admin": "^10.0.2",
+    "moment": "^2.29.2",
     "mongoose": "^6.2.8"
   }
 }

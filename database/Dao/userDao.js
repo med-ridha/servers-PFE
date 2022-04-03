@@ -1,27 +1,46 @@
 import bcrypt from 'bcrypt'
 import user from '../module/user.js'
+import token from '../module/token.js'
+import moment from 'moment'
 
 let userDao = {}
 
 export default userDao = {
     login: async function(body) {
-        let _id = body.email;
-        let password = body.password;
-        let userResult = await user.find({ _id: _id });
-        if (userResult[0]) {
-            let hash = userResult[0].password;
-            console.log(userResult)
-            let result = await bcrypt.compare(password, hash);
-            if (result) {
-                return {
-                    status: "welcome",
-                    userResult
-                };
+        let promise = new Promise ( async ( res, rej ) => {
+            let _id = body.email;
+            let password = body.password;
+            let userResult = await user.find({ _id: _id });
+            if (userResult[0]) {
+                let hash = userResult[0].password;
+                let result = await bcrypt.compare(password, hash);
+                if (result) {
+                    (new token({
+                        email: _id,
+                        token: Math.random().toString(36).substring(2, 8),
+                        used: false,
+                        dateCreated: moment.now(),
+                        dateExpo: moment.now() + 21600000 // 6 hours
+                    })).save()
+                    .then( result => {
+                        res(result)
+                    })
+                    .catch((error) => {
+                        rej( error )
+                    });
+                } else {
+                    return { error: "wrong password" }
+                }
             } else {
-                return { error: "wrong password" }
+                return { error: "email doesn't exists" }
             }
-        } else {
-            return { error: "email doesn't exists" }
+        })
+
+        try {
+            let result = await promise;
+            return result;
+        } catch (error) {
+            return error;
         }
     },
     createUser: async function(body) {
@@ -71,6 +90,25 @@ export default userDao = {
             return result;
         } catch (error) {
             return error;
+        }
+    },
+    checkToken : async function(body) {
+        let userToken = body.token;
+        let email = body.email;
+        let result = await token.find({ token: userToken , email: email})
+        if (result[0]){
+            for (let count = 0; count < result.length ; count+=1){
+                let dateExpo = new Date(result[count].dateExpo).getTime();
+                let now = new Date().getTime();
+                if ((dateExpo - now) <= 21600000 && !result[count].used){
+                    console.log(dateExpo);
+                    await token.updateOne( {_id: result[count].id}, {used: true})
+                    return { result: "welcome" }
+                }
+            }
+            return { result: "expired" }
+        }else{
+            return { result: "not found"}
         }
     }
 }
