@@ -4,6 +4,7 @@ import firebase from './firebase/service.js'
 import mongoose from './database/mongoose.js'
 import userDao from './database/Dao/userDao.js'
 import path from 'path'
+import './admin/main.js'
 let __dirname = path.resolve(path.dirname(''));
 
 let app = express();
@@ -13,6 +14,7 @@ let PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`listening on PORT ${PORT}`);
 })
+
 
 app.get("/sendNotif", (req, res) => {
     res.sendFile("./client/notifications.html", { root: __dirname });

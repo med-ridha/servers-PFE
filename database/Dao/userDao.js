@@ -3,9 +3,7 @@ import user from '../module/user.js'
 import token from '../module/token.js'
 import moment from 'moment'
 
-let userDao = {}
-
-export default userDao = {
+let userDao = {
     login: async function(body) {
         let promise = new Promise ( async ( res, rej ) => {
             let _id = body.email;
@@ -112,3 +110,5 @@ export default userDao = {
         }
     }
 }
+
+export default userDao
