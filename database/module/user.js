@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 const userSchema = new mongoose.Schema({
+    collabId: { type: String, default: null },
     _id: { type: String, required: true }, //email
     name: { type: String, required: true },
     surname: { type: String, required: true },

@@ -6,17 +6,22 @@ let adminDao = {
         let promise = new Promise ( async ( res, rej ) => {
             let _id = body.email;
             let password = body.password;
-            let userResult = await user.find({ _id: _id });
+            let userResult = await admin.find({ _id: _id });
             if (userResult[0]) {
                 let hash = userResult[0].password;
                 let result = await bcrypt.compare(password, hash);
                 if (result) {
-                    return { "result" : result }
+                    let data = {
+                        email: userResult[0]._id,
+                        name: userResult[0].name,
+                        surname: userResult[0].surname
+                    }
+                    res( { "result" : "welcome", "value" : data } )
                 } else {
-                    return { error: "wrong password" }
+                    rej( { error: "wrong password" } )
                 }
             } else {
-                return { error: "email doesn't exists" }
+                rej( { error: "email doesn't exists" } )
             }
         })
 
@@ -35,6 +40,7 @@ let adminDao = {
             let name = body.name;
             let surname = body.surname;
             let password = body.password;
+
             bcrypt.hash(password, saltRounds).then(hash => {
                 (new admin({
                     _id: _id,

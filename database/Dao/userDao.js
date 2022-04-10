@@ -5,7 +5,7 @@ import moment from 'moment'
 
 let userDao = {
     login: async function(body) {
-        let promise = new Promise ( async ( res, rej ) => {
+        let promise = new Promise(async (res, rej) => {
             let _id = body.email;
             let password = body.password;
             let userResult = await user.find({ _id: _id });
@@ -20,17 +20,17 @@ let userDao = {
                         dateCreated: moment.now(),
                         dateExpo: moment.now() + 21600000 // 6 hours
                     })).save()
-                    .then( result => {
-                        res(result)
-                    })
-                    .catch((error) => {
-                        rej( error )
-                    });
+                        .then(result => {
+                            res(result)
+                        })
+                        .catch((error) => {
+                            rej(error)
+                        });
                 } else {
-                    return { error: "wrong password" }
+                    rej({ error: "wrong password" })
                 }
             } else {
-                return { error: "email doesn't exists" }
+                rej({ error: "email doesn't exists" })
             }
         })
 
@@ -90,25 +90,26 @@ let userDao = {
             return error;
         }
     },
-    checkToken : async function(body) {
+    checkToken: async function(body) {
         let userToken = body.token;
         let email = body.email;
-        let result = await token.find({ token: userToken , email: email})
-        if (result[0]){
-            for (let count = 0; count < result.length ; count+=1){
+        let result = await token.find({ token: userToken, email: email })
+        if (result[0]) {
+            for (let count = 0; count < result.length; count += 1) {
                 let dateExpo = new Date(result[count].dateExpo).getTime();
                 let now = new Date().getTime();
-                if ((dateExpo - now) <= 21600000 && !result[count].used){
+                if ((dateExpo - now) <= 21600000 && !result[count].used) {
                     console.log(dateExpo);
-                    await token.updateOne( {_id: result[count].id}, {used: true})
+                    await token.updateOne({ _id: result[count].id }, { used: true })
                     return { result: "welcome" }
                 }
             }
             return { result: "expired" }
-        }else{
-            return { result: "not found"}
+        } else {
+            return { result: "not found" }
         }
-    }
+    },
+
 }
 
 export default userDao
