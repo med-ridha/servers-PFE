@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express'
 import cookie_parser from 'cookie-parser'
+import firebase from '../firebase/service.js'
 import admin from '../database/Dao/adminDao.js'
 import path from 'path'
 let __dirname = path.resolve(path.dirname(''));
@@ -12,6 +13,15 @@ let PORT = process.env.ADMINPORT || 1337;
 
 app.listen(PORT, () => {
     console.log(`admin server listening on PORT ${PORT}`);
+})
+
+app.get("/sendNotif", (req, res) => {
+    res.sendFile("../client/notifications.html", { root: __dirname });
+})
+
+app.post("/notification/sendToTopic", async (req, res) => {
+    await firebase.sendToTopic(req.body);
+    res.json({ "res": "ok" });
 })
 
 app.get("/login", (req, res) => {

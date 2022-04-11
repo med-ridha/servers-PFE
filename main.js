@@ -1,12 +1,9 @@
 import 'dotenv/config';
-import express from 'express'
-import firebase from './firebase/service.js'
 import './database/mongoose.js'
+import './admin/main.js'
+import express from 'express'
 import userDao from './database/Dao/userDao.js'
 import collabDao from './database/Dao/collabDao.js'
-import path from 'path'
-import './admin/main.js'
-let __dirname = path.resolve(path.dirname(''));
 
 let app = express();
 app.use(express.json());
@@ -17,9 +14,6 @@ app.listen(PORT, () => {
 })
 
 
-app.get("/sendNotif", (req, res) => {
-    res.sendFile("./client/notifications.html", { root: __dirname });
-})
 
 app.post("/login", async (req, res) => {
     let result = await userDao.login(req.body)
@@ -31,13 +25,22 @@ app.post("/checktoken", async (req, res) => {
     res.json(result)
 })
 
-app.post("/notification/push", async (req, res) => {
-    await firebase.sendToTopic(req.body);
-    res.json({ "res": "ok" });
-})
 
 app.post("/createUser", async (req, res) => {
     let result = await userDao.createUser(req.body)
+    if (result.status === "success"){
+        res.status(200).json(result);
+    }else{
+        if (result.value.code === 11000){
+            res.status(401).json(result);
+        }else {
+            res.status(400).json(result);
+        }
+    }
+})
+
+app.post("/updateUser", async (req, res) => {
+    let result = await userDao.updateUser(req.body)
     res.json(result);
 })
 

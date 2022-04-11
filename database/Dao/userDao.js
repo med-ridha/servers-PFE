@@ -2,15 +2,55 @@ import bcrypt from 'bcrypt'
 import user from '../module/user.js'
 import token from '../module/token.js'
 import moment from 'moment'
+import nodemailer from 'nodemailer'
+
+let saltRounds = 9;
 
 let userDao = {
+    updateUser: async function (body) {
+        let promise = new Promise(async (res, rej) => {
+            let _id = body.email;
+            try{
+                let oldUser = await user.findOne({ _id: _id })
+                let pass = body.password;
+                let hash = await bcrypt.hash(pass, saltRounds)
+                let data = {
+                    name: body.name || oldUser.name,
+                    surname: body.surname || oldUser.surname,
+                    password: hash || oldUser.password,
+                    numFiscal: body.numFiscal || oldUser.numFiscal,
+                    phoneNumber: body.phoneNumber || oldUser.phoneNumber,
+                    codeVoucher: body.codeVoucher || oldUser.coudeVoucher,
+                    nomStructure: body.nomStructure || oldUser.nomStructure,
+                    phoneStructure: body.phoneStructure || oldUser.phoneStructure,
+                    adressStructure: body.adressStructure || oldUser.adressStructure
+                }
+                let update = await user.updateOne({_id: _id}, data);
+                res ({
+                    "result": "done",
+                    "value": update
+                })
+            }catch (err) {
+                rej ({
+                    "result": "error",
+                    "value": err
+                })
+            }
+        })
+        try{
+            let result = await promise;
+            return result;
+        }catch (err) {
+            return err;
+        }
+    },
     login: async function(body) {
         let promise = new Promise(async (res, rej) => {
             let _id = body.email;
             let password = body.password;
-            let userResult = await user.find({ _id: _id });
-            if (userResult[0]) {
-                let hash = userResult[0].password;
+            let userResult = await user.findOne({ _id: _id });
+            if (userResult) {
+                let hash = userResult.password;
                 let result = await bcrypt.compare(password, hash);
                 if (result) {
                     (new token({
@@ -20,7 +60,32 @@ let userDao = {
                         dateCreated: moment.now(),
                         dateExpo: moment.now() + 21600000 // 6 hours
                     })).save()
-                        .then(result => {
+                        .then(async result => {
+                            let transporter = nodemailer.createTransport({
+                                host: "smtp-relay.sendinblue.com",
+                                port:587,
+                                secure:false,
+                                auth: {
+                                    user: "ridha.zemzem24@gmail.com",
+                                    pass: "N43P8mJrDRCV1QWk"
+                                },
+                                tls: {
+                                    rejectUnauthorized: false
+                                }
+                            })
+                            let mailOptions = {
+                                from: '"zarga" <ridha.zemzem24@gmail.com>', // sender address
+                                to: _id, // list of receivers
+                                subject: "token", // Subject line
+                                text: result.token, // plain text body
+                                html: `<b>${result.token}</b>`, // html body
+                            }
+                            try{
+                                let info = await transporter.sendMail(mailOptions);
+                                console.log("Message send" + info.messageId)
+                            }catch(err){
+                                console.log("message not sent " + err)
+                            }
                             res(result)
                         })
                         .catch((error) => {
@@ -43,7 +108,6 @@ let userDao = {
     },
     createUser: async function(body) {
         let promise = new Promise((res, rej) => {
-            let saltRounds = Math.floor(Math.random() * 8) + 8;
 
             let _id = body.email;
             let name = body.name;

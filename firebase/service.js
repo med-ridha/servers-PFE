@@ -1,7 +1,4 @@
 import admin from 'firebase-admin'
-//const admin = require("firebase-admin");
-
-//let serviceAccount = await import("./testpushnotif-ba6cb-firebase-adminsdk-ix8di-4b499dccd8.json");
 
 import serviceAccount from "./testpushnotif-ba6cb-firebase-adminsdk-ix8di-4b499dccd8.json" assert {type: "json"};
 
@@ -10,9 +7,7 @@ admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
 })
 
-let firebase;
-
-export default firebase = { 
+let firebase = { 
     sendToTopic : async function(data) {
         let message = {
             notification: {
@@ -41,3 +36,5 @@ export default firebase = {
         console.log(res);
     }
 }
+
+export default firebase
