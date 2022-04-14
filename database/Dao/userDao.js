@@ -5,9 +5,79 @@ import tokenDao from '../Dao/tokenDao.js'
 let saltRounds = 9;
 
 let userDao = {
-    forgotPassword: async function (body){
+    forgotPasswordToken: async function (body){
+        let promise = new Promise(async (res, rej) => {
+            let email = body.email;
+            let newPassword = body.password;
+            let userResult = await user.findOne({ email: email });
+            if (userResult) {
+                let r = await tokenDao.checkToken(body);
+                if (r.result == "success") {
+                    let hash = await bcrypt.hash(newPassword, saltRounds);
+                    let update = await user.updateOne({email: email}, {password: hash}); 
+                    res({
+                        "result": "success",
+                        "value": update 
+                    })
+                } else {
+                    rej({
+                        "result": "error",
+                        "value": {
+                            "code": 4,
+                            "message": "invalid Token"
+                        }
+                    })
+                }
+            } else {
+                rej({
+                    "result": "error",
+                    "value": {
+                        code: 401,
+                        message: "email doesn't exists"
+                    }
+                })
+            }
+        })
 
+        try {
+            let result = await promise;
+            return result;
+        } catch (error) {
+            return error;
+        }
     },
+    forgotPassword: async function (body){
+        let promise = new Promise(async (res, rej) => {
+            let email = body.email;
+            let userResult = await user.findOne({ email: email });
+            if (userResult) {
+                    let token = await tokenDao.createToken(email);
+                    console.log(token);
+                    res({
+                        "result": "success",
+                        "value": {
+                            "code": 200
+                        }
+                    })
+            } else {
+                rej({
+                    "result": "error",
+                    "value": {
+                        code: 401,
+                        message: "email doesn't exists"
+                    }
+                })
+            }
+        })
+
+        try {
+            let result = await promise;
+            return result;
+        } catch (error) {
+            return error;
+        }
+    },
+
     updatePassword: async function(body) {
         let promise = new Promise(async (res, rej) => {
             let email = body.email;
@@ -125,8 +195,7 @@ let userDao = {
                 } else {
                     rej({
                         "result": "error",
-                        "value": {
-                            code: 402,
+                        "value": { code: 402,
                             message: "wrong password"
                         }
                     })
