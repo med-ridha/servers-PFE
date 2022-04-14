@@ -13,23 +13,23 @@ app.listen(PORT, () => {
     console.log(`app server listening on PORT ${PORT}`);
 })
 
-
-
-app.post("/login", async (req, res) => {
-    let result = await userDao.login(req.body)
-    res.json(result)
+app.post("/updatePassword", async (req, res) => {
+    let result = await userDao.updatePassword(req.body)
+    if (result.result === "success"){
+        res.status(200).json(result)
+    }else{
+        if (result.value.code === 4){
+            res.status(401).json(result);
+        }else {
+            res.status(400).json(result);
+        }
+    }
 })
 
-app.post("/checktoken", async (req, res) => {
-    let result = await userDao.checkToken(req.body)
-    res.json(result)
-})
-
-
-app.post("/createUser", async (req, res) => {
-    let result = await userDao.createUser(req.body)
-    if (result.status === "success"){
-        res.status(200).json(result);
+app.post("/verifyEmail", async (req, res) => {
+    let result = await userDao.verifyEmail(req.body)
+    if (result.result === "success"){
+        res.status(200).json(result)
     }else{
         if (result.value.code === 11000){
             res.status(401).json(result);
@@ -39,9 +39,61 @@ app.post("/createUser", async (req, res) => {
     }
 })
 
+
+app.post("/checkToken", async (req, res) => {
+    let result = await userDao.login(req.body)
+    if (result.result === "success"){
+        let data = result.value;
+        res.status(200).json(data);
+    }else{
+        if (result.value.code === 4){
+            res.status(401).json(result);
+        }else {
+            res.status(400).json(result);
+        }
+    }
+})
+
+app.post("/login", async (req, res) => {
+    let result = await userDao.createLoginToken(req.body)
+    if (result.result === "success"){
+        res.status(200).json(result);
+    }else{
+        if (result.value.code === 401){
+            res.status(401).json(result);
+        }else if (result.value.code === 402){
+            res.status(402).json(result);
+        }else {
+            res.status(400).json(result);
+        }
+    }
+})
+
+
+app.post("/createUser", async (req, res) => {
+    let result = await userDao.createUser(req.body)
+    if (result.result === "success"){
+        res.status(200).json(result)
+    }else{
+        if (result.value.code === 4){
+            res.status(401).json(result);
+        }else {
+            res.status(400).json(result);
+        }
+    }
+})
+
 app.post("/updateUser", async (req, res) => {
     let result = await userDao.updateUser(req.body)
-    res.json(result);
+    if (result.result === "success"){
+        res.status(200).json(result)
+    }else{
+        if (result.value.code === 4){
+            res.status(401).json(result);
+        }else {
+            res.status(400).json(result);
+        }
+    }
 })
 
 app.post("/addToCollab", async (req, res) => {
