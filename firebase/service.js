@@ -1,6 +1,6 @@
 import admin from 'firebase-admin'
 
-import serviceAccount from "./testpushnotif-ba6cb-firebase-adminsdk-ix8di-4b499dccd8.json" assert {type: "json"};
+import serviceAccount from "./juridoc-b18e9-firebase-adminsdk-4ixf9-6b2d679b7f.json" assert {type: "json"};
 
 
 admin.initializeApp({
@@ -17,7 +17,7 @@ let firebase = {
             android: {
                 notification: {
                     image: data.image,
-                    channel_id: "com.example.mobileside"
+                    channel_id: "com.example.juridoc"
                 }
             },
             apns: {

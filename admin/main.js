@@ -11,7 +11,7 @@ app.use(express.json());
 app.use(cookie_parser('1234'))
 let PORT = process.env.ADMINPORT || 1337;
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`admin server listening on PORT ${PORT}`);
 })
 

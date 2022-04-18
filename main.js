@@ -9,12 +9,12 @@ let app = express();
 app.use(express.json());
 let PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`app server listening on PORT ${PORT}`);
 })
 
-app.post("/forgotPassword", async (req, res) => {
-    let result = await userDao.forgotPassword(req.body)
+app.post("/checkEmail", async (req, res) => {
+    let result = await userDao.checkEmail(req.body)
     if (result.result === "success") {
         res.status(200).json(result)
     } else {
@@ -26,15 +26,13 @@ app.post("/forgotPassword", async (req, res) => {
     }
 })
 
-app.post("/forgotPasswordToken", async (req, res) => {
-    let result = await userDao.forgotPasswordToken(req.body)
+app.post("/newPassword", async (req, res) => {
+    let result = await userDao.newPassword(req.body)
     if (result.result === "success") {
         res.status(200).json(result)
     } else {
         if (result.value.code === 401) {
             res.status(401).json(result);
-        } else if (result.value.code === 4) {
-            res.status(402).json(result);
         } else {
             res.status(400).json(result);
         }
@@ -100,8 +98,9 @@ app.post("/login", async (req, res) => {
 
 app.post("/createUser", async (req, res) => {
     let result = await userDao.createUser(req.body)
+    console.log(result.value);
     if (result.result === "success") {
-        res.status(200).json(result)
+        res.status(200).json(result.value)
     } else {
         if (result.value.code === 4) {
             res.status(401).json(result);
