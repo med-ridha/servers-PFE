@@ -45,6 +45,7 @@ let userDao = {
     let promise = new Promise(async (res, rej) => {
       let email = body.email;
       let newPassword = body.newPassword;
+
       let userResult = await user.findOne({ email: email });
       if (userResult) {
         let hash = await bcrypt.hash(newPassword, saltRounds);
@@ -122,13 +123,18 @@ let userDao = {
     let promise = new Promise(async (res, rej) => {
       let email = body.email;
       let password = body.password;
+      let newPassword = body.newPassword;
       try {
         let oldUser = await user.findOne({ email: email })
         let hash = oldUser.password;
         let auth = await bcrypt.compare(password, hash);
         if (auth) {
+          let newHash = undefined;
+          if (newPassword.length >= 8)
+            newHash = await bcrypt.hash(newPassword, saltRounds);
           let data = {
             name: body.name || oldUser.name,
+            password: newHash || oldUser.password,
             surname: body.surname || oldUser.surname,
             numFiscal: body.numFiscal || oldUser.numFiscal,
             phoneNumber: body.phoneNumber || oldUser.phoneNumber,
@@ -137,10 +143,11 @@ let userDao = {
             phoneStructure: body.phoneStructure || oldUser.phoneStructure,
             adressStructure: body.adressStructure || oldUser.adressStructure
           }
-          let update = await user.updateOne({ email: email }, data);
+          await user.updateOne({ email: email }, data);
+          let newUser = await user.findOne({ email: email });
           res({
             "result": "success",
-            "value": update
+            "value": newUser
           })
         } else {
           rej({
