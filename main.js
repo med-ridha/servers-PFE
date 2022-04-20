@@ -125,13 +125,13 @@ app.post("/updateUser", async (req, res) => {
 
 app.post("/addToCollab", async (req, res) => {
   let result = await collabDao.addToCollab(req.body)
-  if (result.result === "success"){
+  if (result.result === "success") {
     res.status(200).json(result.value)
-  }else if (result.value.code === 5){
+  } else if (result.value.code === 5) {
     res.status(405).json(result.value)
-  } else if (result.value.code === 404){
+  } else if (result.value.code === 404) {
     res.status(404).json(result.value)
-  }else {
+  } else {
     result.status(500).json(result.value)
   }
 })

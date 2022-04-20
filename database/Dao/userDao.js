@@ -6,6 +6,36 @@ let saltRounds = 9;
 
 let userDao = {
 
+  getAll: async function() {
+    let promise = new Promise(async (res, rej) => {
+      try {
+        let users = await user.find({});
+        res({
+          "result": "success",
+          "value": {
+            "code": 0,
+            "message": users
+          }
+        })
+      } catch (err) {
+        rej({
+          "result": "error",
+          "value": {
+            "code": 500,
+            "message": err
+          }
+        })
+      }
+    })
+
+    try {
+      let result = await promise;
+      return result;
+    } catch (err) {
+      return err;
+    }
+  },
+
   checkEmail: async function(body) {
     let promise = new Promise(async (res, rej) => {
       let email = body.email;
