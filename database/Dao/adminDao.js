@@ -51,13 +51,13 @@ let adminDao = {
         })).save()
           .then(_ => {
             let result = {
-              status: "success",
+              result: "success",
             }
             res(result);
           })
           .catch((error) => {
             let result = {
-              status: "error",
+              result: "error",
               value: error
             }
             rej(result);
@@ -71,6 +71,8 @@ let adminDao = {
       return error;
     }
   },
+
+
 }
 
 export default adminDao;

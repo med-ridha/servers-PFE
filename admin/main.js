@@ -6,12 +6,19 @@ import admin from '../database/Dao/adminDao.js'
 import path from 'path'
 import cors from 'cors'
 import userDao from '../database/Dao/userDao.js';
+import documentDao from '../database/Dao/documentDao.js'
+import modulesDao from '../database/Dao/moduleDao.js'
 import jwt from 'jsonwebtoken'
 let __dirname = path.resolve(path.dirname(''));
 
 let app = express();
-app.use(express.json());
+app.use(express.json({limit: '5mb'}));
 app.use(cors());
+app.use((_, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+})
 app.use(cookie_parser('1234'))
 let PORT = process.env.ADMINPORT || 1337;
 
@@ -67,11 +74,50 @@ app.post('/auth/checkToken', authenticateToken, async (req, res) => {
   res.json({ "result": req.user })
 })
 
-app.get('/users/all', authenticateToken, async (req, res) => {
+app.get('/users/all', authenticateToken, async (_, res) => {
   let result = await userDao.getAll();
   if (result.result = "success") {
     res.status(200).json(result.value);
   } else {
     res.status(404).json(result.value);
   }
+})
+
+
+app.post('/modules/add', async (req, res) => {
+  let result = await modulesDao.addModule(req.body);
+  res.status(200).json(result)
+})
+
+app.post('/documents/add', async (req, res) => {
+  let result = await documentDao.addDocument(req.body);
+  if (result.result = "success") {
+    res.status(200).json(result.value);
+  } else {
+    res.status(404).json(result.value);
+  }
+})
+
+app.get('/documents/all', authenticateToken, async (_, res) => {
+  let result = await documentDao.getAll();
+  if (result.result = "success") {
+    res.status(200).json(result.value);
+  } else {
+    res.status(404).json(result.value);
+  }
+})
+
+app.get('/modules/getAll', async (req, res) => {
+  let result = await modulesDao.getAll()
+  res.status(200).json(result.value)
+})
+
+app.get('/modules/getModuleById/:id', async (req, res) => {
+  let result = await modulesDao.getModuleById(req.params.id)
+  res.status(200).json(result.value)
+})
+
+app.get('/modules/getModule/:id', async (req, res) => {
+  let result = await modulesDao.getModule(req.params.id)
+  res.status(200).json(result.value)
 })
