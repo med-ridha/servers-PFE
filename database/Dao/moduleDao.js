@@ -1,7 +1,7 @@
 import modules from '../module/module.js'
 
 let modulesDao = {
-  getAll: async function (){
+  getAll: async function() {
     let promise = new Promise(async (res, rej) => {
       try {
         let allModules = await modules.find({});
@@ -32,10 +32,14 @@ let modulesDao = {
   },
   remDocFromCat: async function(moduleId, categorieId, documentId) {
     let promise = new Promise(async (res, rej) => {
+      let mod = await modules.findOne({ _id: moduleId })
+      let numDoc = mod.numDoc - 1;
+      console.log(numDoc)
 
-     let result = await modules.findOneAndUpdate({ _id: moduleId, "categories._id": categorieId },
+      await modules.findOneAndUpdate({ _id: moduleId, "categories._id": categorieId },
         { "$pull": { "categories.$.documentsIds": documentId } })
-      res({ok: result})
+      let finalResult = await modules.updateOne({ _id: moduleId }, { '$set': {numDoc: numDoc} })
+      res({ ok: finalResult })
     })
     try {
       let result = await promise;
@@ -48,10 +52,13 @@ let modulesDao = {
   },
   addDocToCat: async function(moduleId, categorieId, documentId) {
     let promise = new Promise(async (res, rej) => {
-
-     let result = await modules.findOneAndUpdate({ _id: moduleId, "categories._id": categorieId },
+      let mod = await modules.findOne({ _id: moduleId })
+      let numDoc = mod.numDoc + 1;
+      console.log(numDoc)
+      await modules.findOneAndUpdate({ _id: moduleId, "categories._id": categorieId },
         { "$push": { "categories.$.documentsIds": documentId } })
-      res({ok: result})
+      let finalResult = await modules.updateOne({ _id: moduleId }, { '$set': {numDoc: numDoc} })
+      res({ ok: finalResult })
     })
     try {
       let result = await promise;

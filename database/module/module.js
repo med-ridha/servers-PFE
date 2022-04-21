@@ -9,7 +9,7 @@ const moduleSchema = new mongoose.Schema({
   id: { type: Number, required: true, unique: true },
   name: { type: String, required: true },
   categories: [categorie] ,
-  numDoc: { type: String, required: true }
+  numDoc: { type: Number, required: true }
 }, { versionKey: false })
 
 const module = mongoose.model('module', moduleSchema)
