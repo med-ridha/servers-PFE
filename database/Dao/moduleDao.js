@@ -35,11 +35,14 @@ let modulesDao = {
       let mod = await modules.findOne({ _id: moduleId })
       let numDoc = mod.numDoc - 1;
       console.log(numDoc)
-
-      await modules.findOneAndUpdate({ _id: moduleId, "categories._id": categorieId },
-        { "$pull": { "categories.$.documentsIds": documentId } })
-      let finalResult = await modules.updateOne({ _id: moduleId }, { '$set': {numDoc: numDoc} })
-      res({ ok: finalResult })
+      try {
+        await modules.findOneAndUpdate({ _id: moduleId, "categories._id": categorieId },
+          { "$pull": { "categories.$.documentsIds": documentId } })
+        let finalResult = await modules.updateOne({ _id: moduleId }, { '$set': { numDoc: numDoc } })
+        res({ "result": "success", value: { code: 0, message: finalResult } })
+      } catch (error) {
+        rej({ "result": "error", value: { code: 1, message: error } })
+      }
     })
     try {
       let result = await promise;
@@ -55,10 +58,14 @@ let modulesDao = {
       let mod = await modules.findOne({ _id: moduleId })
       let numDoc = mod.numDoc + 1;
       console.log(numDoc)
-      await modules.findOneAndUpdate({ _id: moduleId, "categories._id": categorieId },
-        { "$push": { "categories.$.documentsIds": documentId } })
-      let finalResult = await modules.updateOne({ _id: moduleId }, { '$set': {numDoc: numDoc} })
-      res({ ok: finalResult })
+      try {
+        await modules.findOneAndUpdate({ _id: moduleId, "categories._id": categorieId },
+          { "$push": { "categories.$.documentsIds": documentId } })
+        let finalResult = await modules.updateOne({ _id: moduleId }, { '$set': { numDoc: numDoc } })
+        res({ "result": "success", value: { code: 0, message: finalResult } })
+      } catch (error) {
+        rej({ "result": "error", value: { code: 0, message: error } })
+      }
     })
     try {
       let result = await promise;

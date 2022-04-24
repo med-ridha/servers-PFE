@@ -5,6 +5,58 @@ import tokenDao from '../Dao/tokenDao.js'
 let saltRounds = 9;
 
 let userDao = {
+  getOne: async function(id) {
+    let promise = new Promise(async (res, rej) => {
+      try {
+        let _user = await user.findOne({ _id: id });
+        res({
+          "result": "success",
+          "value": {
+            "code": 0,
+            "message": _user 
+          }
+        })
+      } catch (err) {
+        rej({
+          "result": "error",
+          "value": {
+            "code": 500,
+            "message": err
+          }
+        })
+      }
+    })
+
+    try {
+      let result = await promise;
+      return result;
+    } catch (err) {
+      return err;
+    }
+  },
+  deleteUser: async function(body) {
+    let promise = new Promise(async (res, rej) => {
+      let usertoDelete = await user.findOne({_id: body.id})
+      if (!usertoDelete) {
+        rej ({result: "error", value: {code: 4, message: "user not found!"}})
+      }
+
+      let result = await user.deleteOne({_id: body.id})
+      if (result.deletedCount > 0){
+        res ({result: "success", value: {code: 0, message: "user deleted"}})
+      }else{
+        rej ({result: "error", value: {code: 4, message: "something went wrong"}})
+      }
+    })
+    try {
+      let result = await promise;
+      console.log(result)
+      return result;
+    } catch (err) {
+      console.log(err)
+      return err;
+    }
+  },
 
   getAll: async function() {
     let promise = new Promise(async (res, rej) => {

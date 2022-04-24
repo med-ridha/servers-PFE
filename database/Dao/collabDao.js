@@ -11,7 +11,10 @@ let collabDao = {
         if (collabId === null) {
           throw rej({
             "result": "error",
-            "value": "no collabs"
+            "value": {
+              code: 4,
+              message: "no collabs"
+            }
           })
         }
         let collabs = await collab.findOne({ _id: collabId });
@@ -20,25 +23,40 @@ let collabDao = {
           res({
             "result": "success",
             "value": {
-              "listUsers": collabs.listUsers,
+              code: 0,
+              message: {
+                "collab": collabs,
+                "listUsers": collabs.listUsers,
+              }
             }
           })
+          return
         }
 
         let bulkData = await user.find({ email: { $in: listUsers } })
-        let data = {};
+        let data = []
+        let one = {}
         for (let i = 0; i < bulkData.length; i++) {
-          data[bulkData[i].email] = {
+          data[i] = one[bulkData[i].email] = {
+            "id": bulkData[i]._id,
             "fullName": bulkData[i].name + " " + bulkData[i].surname,
             "phoneNumber": bulkData[i].phoneNumber
           }
+          // data[bulkData[i].email] = {
+          //   "fullName": bulkData[i].name + " " + bulkData[i].surname,
+          //   "phoneNumber": bulkData[i].phoneNumber
+          // }
         }
         console.log(data);
 
         res({
           "result": "success",
           "value": {
-            "listUsers": data,
+            code: 0,
+            message: {
+              "collab": collabs,
+              "listUsers": data,
+            }
           }
         })
       } catch (err) {
@@ -62,17 +80,20 @@ let collabDao = {
       let email = body.email;
       let collabId = body.collabId;
       let userExistes = await user.findOne({ email: email })
-      if (userExistes.collabId != null)
-        throw rej({
-          result: "error",
-          value: {
-            "code": 5,
-            "message": "user already in a collab",
-          }
-        })
       if (userExistes) {
+        if (userExistes.collabId != null) {
+          rej({
+            result: "error",
+            value: {
+              "code": 5,
+              "message": "user already in a collab",
+            }
+          })
+          return;
+        }
         try {
-          let result = await collab.updateOne({ _id: collabId }, { $push: { listUsers: email } });
+          await user.updateOne({ _id: userExistes._id }, { collabId: collabId })
+          await collab.updateOne({ _id: collabId }, { $push: { listUsers: email } });
           res({
             result: "success",
             value: {
@@ -81,6 +102,7 @@ let collabDao = {
             }
           })
         } catch (err) {
+          console.log(err)
           rej({
             result: "error",
             value: {
@@ -154,7 +176,6 @@ let collabDao = {
     } catch (err) {
       return err
     }
-
   }
 }
 
