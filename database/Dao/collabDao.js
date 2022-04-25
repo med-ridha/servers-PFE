@@ -39,6 +39,7 @@ let collabDao = {
         for (let i = 0; i < bulkData.length; i++) {
           data[i] = one[bulkData[i].email] = {
             "id": bulkData[i]._id,
+            "email": bulkData[i].email,
             "fullName": bulkData[i].name + " " + bulkData[i].surname,
             "phoneNumber": bulkData[i].phoneNumber
           }
@@ -129,6 +130,42 @@ let collabDao = {
       return err;
     }
   },
+
+  deleteCollab: async function(body) {
+    let promise = new Promise(async (res, rej) => {
+      let email = body.email;
+      let emailToDelete = body.userToDelete;
+      let thisUser = await user.findOne({ email: email });
+      let userToDelete = await user.findOne({ email: emailToDelete })
+      if (!thisUser || !userToDelete) {
+        rej({
+          result: "error",
+          value: {
+            code: 4,
+            message: "not found"
+          }
+        })
+        return;
+      }
+
+      let collabId = thisUser.collabId;
+      let result = await user.updateOne({ _id: userToDelete._id }, { $set: { collabId: null } })
+      await collab.updateOne({ _id: collabId }, { $pull: { listUsers: emailToDelete } });
+      res({
+        result: "success",
+        value: {
+          code: 0,
+          message: "deleted from collab"
+        }
+      })
+    })
+    try {
+      let result = await promise;
+      return result;
+    } catch (err) {
+      return err;
+    }
+  },
   createCollab: async function(body) {
     let promise = new Promise((res, rej) => {
       let email = body.email;
@@ -136,7 +173,7 @@ let collabDao = {
 
       (new collab({
         name: name,
-        listUsers: [],
+        listUsers: [email],
         dateCreated: moment.now(),
         creator: email
       })).save()
@@ -153,7 +190,7 @@ let collabDao = {
           try {
             await user.updateOne(filter, data)
             res({
-              "result": "done",
+              "result": "success",
               "value": result
             })
           } catch (err) {
