@@ -272,7 +272,8 @@ let userDao = {
           res({
             "result": "success",
             "value": {
-              "code": 200
+              "code": 200,
+              "message": token
             }
           })
         } else {

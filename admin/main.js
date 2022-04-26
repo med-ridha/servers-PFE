@@ -161,7 +161,11 @@ app.get('/documents/all', authenticateToken, async (_, res) => {
 
 app.get('/modules/getAll', async (req, res) => {
   let result = await modulesDao.getAll()
-  res.status(200).json(result.value)
+  if (result.result == "success"){
+    res.status(200).json(result.value)
+  }else {
+    res.status(500).json(result.value)
+  }
 })
 
 app.get('/modules/getModuleById/:id',authenticateToken, async (req, res) => {

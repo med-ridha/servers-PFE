@@ -80,6 +80,7 @@ let abonnDao = {
           })
         }).catch()
       } catch (error) {
+        console.log(error);
         rej({
           result: "error",
           value: {

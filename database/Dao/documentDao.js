@@ -77,6 +77,37 @@ let documentDao = {
       return err;
     }
   },
+  getSome: async function(body) {
+    let promise = new Promise(async (res, rej) => {
+      let listDocumentIds = body.listDocumentIds;
+      try {
+        let someDocuments = await documents.find({_id: {$in : listDocumentIds}});
+        res({
+          "result": "success",
+          "value": {
+            "code": 0,
+            "message": someDocuments 
+          }
+        })
+      } catch (err) {
+        rej({
+          "result": "error",
+          "value": {
+            "code": 500,
+            "message": err
+          }
+        })
+      }
+    })
+
+    try {
+      let result = await promise;
+      return result;
+    } catch (err) {
+      return err;
+    }
+  },
+
   getAll: async function() {
     let promise = new Promise(async (res, rej) => {
       try {

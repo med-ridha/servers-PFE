@@ -5,6 +5,8 @@ import express from 'express'
 import userDao from './database/Dao/userDao.js'
 import collabDao from './database/Dao/collabDao.js'
 import abonnDao from './database/Dao/abonnDao.js'
+import modulesDao from './database/Dao/moduleDao.js'
+import documentDao from './database/Dao/documentDao.js'
 
 let app = express();
 app.use(express.json());
@@ -24,6 +26,15 @@ app.post("/users/createAbonn", async (req, res) => {
     } else {
       res.status(400).json(result.value);
     }
+  }
+})
+
+app.get('/modules/getAll', async (_, res) => {
+  let result = await modulesDao.getAll()
+  if (result.result == "success"){
+    res.status(200).json(result.value)
+  }else {
+    res.status(500).json(result.value)
   }
 })
 
@@ -191,7 +202,11 @@ app.get("/getCollabs/:email", async (req, res) => {
   }
 })
 
-app.post("/createDocument", async (req, res) => {
-  //create document 
-  res.json({ "res": "ok" });
+app.post("/documents/getSome", async (req, res) => {
+  let result = await documentDao.getSome(req.body);
+  if (result.result === "success") {
+    res.status(200).json(result.value);
+  } else {
+    res.status(400).json(result.value);
+  }
 })
