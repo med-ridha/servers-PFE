@@ -20,6 +20,23 @@ app.get('/checkStatus', (_, res) => {
   res.status(200).json({ "result": "success" });
 })
 
+app.post('/modules/cat/latest/:duree', async (req, res) => {
+  let result = await modulesDao.getCategoriesLatest(req.params.duree, req.body);
+  if (result.result == "success") {
+    res.status(200).json(result.value);
+  } else {
+    res.status(500).json(result.value);
+  }
+})
+
+app.get('/modules/latest/:duree', async (req, res) => {
+  let result = await modulesDao.getModulesLatest(req.params);
+  if (result.result == "success") {
+    res.status(200).json(result.value);
+  } else {
+    res.status(500).json(result.value);
+  }
+})
 app.post("/users/getListFavored", async (req, res) => {
   let result = await userDao.getListFavored(req.body.email)
   if (result.result === "success") {
@@ -212,7 +229,7 @@ app.post("/addToCollab", async (req, res) => {
     res.status(405).json(result.value)
   } else if (result.value.code === 404) {
     res.status(404).json(result.value)
-  } else if (result.value.code === 9){
+  } else if (result.value.code === 9) {
     res.status(404).json(result.value)
   } else {
     res.status(500).json(result.value)

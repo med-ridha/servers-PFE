@@ -1,9 +1,8 @@
 import documents from '../module/document.js'
-import moduleDao from '../Dao/moduleDao.js'
 import moment from 'moment'
 import modulesDao from '../Dao/moduleDao.js'
 import userModule from '../module/user.js'
-import { Client } from '@elastic/elasticsearch'
+//import { Client } from '@elastic/elasticsearch'
 
 //const client = new Client({ node: 'http://localhost:9200' })
 
@@ -155,7 +154,7 @@ let documentDao = {
         }
         let moduleId = doc.moduleId;
         let categoryId = doc.categoryId;
-        let r1 = await moduleDao.remDocFromCat(moduleId, categoryId, documentId);
+        let r1 = await modulesDao.remDocFromCat(moduleId, categoryId, documentId);
         if (r1.result == "error") {
           rej({ "result": "error", value: { code: 4, result: r1.value.message } })
           return
@@ -230,7 +229,7 @@ let documentDao = {
           datePublished: dateP
         })).save()
           .then(async result => {
-            await moduleDao.addDocToCat(moduleId, categoryId, result._id);
+            await modulesDao.addDocToCat(moduleId, categoryId, result._id);
             res({
               "result": "success",
               "value": {
@@ -316,8 +315,8 @@ let documentDao = {
 
         let updateResult = await documents.updateOne({ _id: docId }, data)
         if (updateResult.modifiedCount == 1) {
-          await moduleDao.remDocFromCat(doc.moduleId, doc.categoryId, doc._id);
-          await moduleDao.addDocToCat(moduleId, categoryId, doc._id);
+          await modulesDao.remDocFromCat(doc.moduleId, doc.categoryId, doc._id);
+          await modulesDao.addDocToCat(moduleId, categoryId, doc._id);
         }
         res({ result: "success", value: { code: 0, message: JSON.stringify(updateResult) } })
 

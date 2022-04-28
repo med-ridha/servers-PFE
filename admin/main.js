@@ -45,6 +45,11 @@ app.post("/notification/sendToTopic", async (req, res) => {
   res.json({ "res": "ok" });
 })
 
+app.post("/notification/send", async (req, res) => {
+  let result = await firebase.send(req.body);
+  res.json({ "res": result });
+})
+
 
 
 app.post("/auth/login", async (req, res) => {
