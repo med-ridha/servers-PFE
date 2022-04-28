@@ -2,6 +2,7 @@ import documents from '../module/document.js'
 import moduleDao from '../Dao/moduleDao.js'
 import moment from 'moment'
 import modulesDao from '../Dao/moduleDao.js'
+import userModule from '../module/user.js'
 import { Client } from '@elastic/elasticsearch'
 
 //const client = new Client({ node: 'http://localhost:9200' })
@@ -81,12 +82,12 @@ let documentDao = {
     let promise = new Promise(async (res, rej) => {
       let listDocumentIds = body.listDocumentIds;
       try {
-        let someDocuments = await documents.find({_id: {$in : listDocumentIds}});
+        let someDocuments = await documents.find({ _id: { $in: listDocumentIds } });
         res({
           "result": "success",
           "value": {
             "code": 0,
-            "message": someDocuments 
+            "message": someDocuments
           }
         })
       } catch (err) {
@@ -159,7 +160,7 @@ let documentDao = {
           rej({ "result": "error", value: { code: 4, result: r1.value.message } })
           return
         }
-
+        await userModule.updateMany({ listfavored: { $all: [documentId] } }, { $pull: { listfavored: documentId } });
         let r2 = await documents.findOneAndDelete({ _id: documentId })
         res({ "result": 'success', value: { code: 0, result: r2 } })
 
@@ -283,7 +284,7 @@ let documentDao = {
           rej({ result: "error", value: { code: 1, message: "module not found" } })
           return;
         }
-        
+
         let mod = modP.value.message;
         moduleId = mod._id;
 
@@ -314,8 +315,8 @@ let documentDao = {
         }
 
         let updateResult = await documents.updateOne({ _id: docId }, data)
-        if (updateResult.modifiedCount == 1){
-          await moduleDao.remDocFromCat(doc.moduleId, doc.categoryId, doc._id);         
+        if (updateResult.modifiedCount == 1) {
+          await moduleDao.remDocFromCat(doc.moduleId, doc.categoryId, doc._id);
           await moduleDao.addDocToCat(moduleId, categoryId, doc._id);
         }
         res({ result: "success", value: { code: 0, message: JSON.stringify(updateResult) } })

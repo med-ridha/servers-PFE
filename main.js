@@ -16,12 +16,55 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`app server listening on PORT ${PORT}`);
 })
 
+app.get('/checkStatus', (_, res) => {
+  res.status(200).json({ "result": "success" });
+})
+
+app.post("/users/getListFavored", async (req, res) => {
+  let result = await userDao.getListFavored(req.body.email)
+  if (result.result === "success") {
+    res.status(200).json(result.value)
+  } else {
+    if (result.value.code === 4) {
+      res.status(401).json(result.value);
+    } else {
+      res.status(400).json(result.value);
+    }
+  }
+})
+
+app.post("/documents/removeFromFavorite", async (req, res) => {
+  let result = await userDao.removeDocFromFav(req.body)
+  if (result.result === "success") {
+    res.status(200).json(result.value)
+  } else {
+    if (result.value.code === 4) {
+      res.status(401).json(result.value);
+    } else {
+      res.status(400).json(result.value);
+    }
+  }
+})
+
+app.post("/documents/addToFavorite", async (req, res) => {
+  let result = await userDao.addDocToFav(req.body)
+  if (result.result === "success") {
+    res.status(200).json(result.value)
+  } else {
+    if (result.value.code === 4) {
+      res.status(401).json(result.value);
+    } else {
+      res.status(400).json(result.value);
+    }
+  }
+})
+
 app.post("/users/createAbonn", async (req, res) => {
   let result = await abonnDao.createAbonn(req.body)
   if (result.result === "success") {
     res.status(200).json(result.value)
   } else {
-    if (result.value.code === 401) {
+    if (result.value.code === 4) {
       res.status(401).json(result.value);
     } else {
       res.status(400).json(result.value);
@@ -31,9 +74,9 @@ app.post("/users/createAbonn", async (req, res) => {
 
 app.get('/modules/getAll', async (_, res) => {
   let result = await modulesDao.getAll()
-  if (result.result == "success"){
+  if (result.result == "success") {
     res.status(200).json(result.value)
-  }else {
+  } else {
     res.status(500).json(result.value)
   }
 })
@@ -169,8 +212,10 @@ app.post("/addToCollab", async (req, res) => {
     res.status(405).json(result.value)
   } else if (result.value.code === 404) {
     res.status(404).json(result.value)
+  } else if (result.value.code === 9){
+    res.status(404).json(result.value)
   } else {
-    result.status(500).json(result.value)
+    res.status(500).json(result.value)
   }
 })
 

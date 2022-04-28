@@ -19,6 +19,7 @@ let abonnDao = {
         }
         let listAbonn = user.abonnement;
         let abonns = await abonn.find({ _id: { $in: listAbonn } });
+        console.log(abonns);
         res({
           result: "success",
           value: {

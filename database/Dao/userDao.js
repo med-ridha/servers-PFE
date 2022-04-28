@@ -1,10 +1,56 @@
 import bcrypt from 'bcrypt'
 import user from '../module/user.js'
 import tokenDao from '../Dao/tokenDao.js'
+import documentDao from './documentDao.js';
+import documents from '../module/document.js'
+import collabDao from './collabDao.js';
+import collab from '../module/collab.js'
 
 let saltRounds = 9;
 
 let userDao = {
+  getListFavored: async function(email) {
+    let promise = new Promise(async (res, rej) => {
+      try {
+        let oneUser = await user.findOne({ email: email });
+        if (!oneUser) {
+          rej({
+            "result": "error",
+            "value": {
+              "code": 500,
+              "message": err
+            }
+          })
+          return;
+        }
+        let listFavored = [];
+        listFavored = oneUser.listfavored;
+        res({
+          "result": "success",
+          "value": {
+            "code": 0,
+            "message": listFavored
+          }
+        })
+
+      } catch (error) {
+        rej({
+          "result": "error",
+          "value": {
+            "code": 500,
+            "message": err
+          }
+        })
+        return;
+      }
+    })
+    try {
+      let result = await promise;
+      return result;
+    } catch (err) {
+      return err;
+    }
+  },
   getOne: async function(id) {
     let promise = new Promise(async (res, rej) => {
       try {
@@ -13,7 +59,7 @@ let userDao = {
           "result": "success",
           "value": {
             "code": 0,
-            "message": _user 
+            "message": _user
           }
         })
       } catch (err) {
@@ -36,16 +82,21 @@ let userDao = {
   },
   deleteUser: async function(body) {
     let promise = new Promise(async (res, rej) => {
-      let usertoDelete = await user.findOne({_id: body.id})
+      let usertoDelete = await user.findOne({ _id: body.id })
       if (!usertoDelete) {
-        rej ({result: "error", value: {code: 4, message: "user not found!"}})
+        rej({ result: "error", value: { code: 4, message: "user not found!" } })
+        return;
       }
 
-      let result = await user.deleteOne({_id: body.id})
-      if (result.deletedCount > 0){
-        res ({result: "success", value: {code: 0, message: "user deleted"}})
-      }else{
-        rej ({result: "error", value: {code: 4, message: "something went wrong"}})
+      if (usertoDelete.collabId) {
+        let result1 = await collab.updateOne({ _id: usertoDelete.collabId }, { $pull: { listUsers: usertoDelete.email } });
+        console.log(result1);
+      }
+      let result = await user.deleteOne({ _id: body.id })
+      if (result.deletedCount > 0) {
+        res({ result: "success", value: { code: 0, message: "user deleted" } })
+      } else {
+        rej({ result: "error", value: { code: 4, message: "something went wrong" } })
       }
     })
     try {
@@ -208,11 +259,21 @@ let userDao = {
       let newPassword = body.newPassword;
       try {
         let oldUser = await user.findOne({ email: email })
+        if (!oldUser) {
+          rej({
+            "result": "error",
+            "value": {
+              code: 4,
+              message: "user not found"
+            }
+          })
+          return;
+        }
         let hash = oldUser.password;
         let auth = await bcrypt.compare(password, hash);
         if (auth) {
           let newHash = undefined;
-          if (newPassword.length >= 8)
+          if (newPassword)
             newHash = await bcrypt.hash(newPassword, saltRounds);
           let data = {
             name: body.name || oldUser.name,
@@ -239,13 +300,15 @@ let userDao = {
               "message": "wrong password"
             }
           })
+          return;
         }
       } catch (err) {
+        console.log(err)
         rej({
           "result": "error",
           "value": {
             "code": 2,
-            "message": "wrong password"
+            "message": err
           }
         })
       }
@@ -435,6 +498,144 @@ let userDao = {
       return error;
     }
   },
+  addDocToFav: async function(body) {
+    let promise = new Promise(async (res, rej) => {
+      let email = body.email;
+      let docId = body.documentId;
+      if (!docId || docId.length == 0) {
+        rej({
+          "result": "error",
+          "value": {
+            "code": 3,
+            "message": "missing document Id"
+          }
+        })
+        return;
+      }
+      try {
+        let oneDocument = await documents.findOne({ _id: docId })
+        if (!oneDocument) {
+          rej({
+            "result": "error",
+            "value": {
+              "code": 4,
+              "message": "document not found"
+            }
+          })
+          return;
+        }
+        let oneUser = await user.findOne({ email: email });
+        if (!oneUser) {
+          rej({
+            "result": "error",
+            "value": {
+              "code": 4,
+              "message": "user not found"
+            }
+          })
+          return;
+        }
+        await user.updateOne({ email: email }, { $push: { listfavored: docId } })
+        let updatedUser = await user.findOne({ email: email });
+        res({
+          "result": "success",
+          value: {
+            "code": 0,
+            "message": updatedUser.listfavored
+          }
+        })
+      } catch (error) {
+        rej({
+          "result": "error",
+          "value": {
+            "code": 5,
+            "message": error
+          }
+        })
+        return;
+      }
+    })
+    try {
+      let result = await promise;
+      return result;
+    } catch (error) {
+      return error;
+    }
+  },
+  removeDocFromFav: async function(body) {
+    let promise = new Promise(async (res, rej) => {
+      let email = body.email;
+      let docId = body.documentId;
+      if (!docId || docId.length == 0) {
+        rej({
+          "result": "error",
+          "value": {
+            "code": 3,
+            "message": "missing document Id"
+          }
+        })
+        return;
+      }
+      try {
+        let oneDocument = await documents.findOne({ _id: docId })
+        if (!oneDocument) {
+          rej({
+            "result": "error",
+            "value": {
+              "code": 4,
+              "message": "document not found"
+            }
+          })
+          return;
+        }
+        let oneUser = await user.findOne({ email: email });
+        if (!oneUser) {
+          rej({
+            "result": "error",
+            "value": {
+              "code": 4,
+              "message": "user not found"
+            }
+          })
+          return;
+        }
+        if (!oneUser.listfavored.includes(docId)) {
+          rej({
+            "result": "error",
+            "value": {
+              "code": 9,
+              "message": "document is not favored"
+            }
+          })
+          return;
+        }
+        await user.updateOne({ email: email }, { $pull: { listfavored: docId } })
+        let updatedUser = await user.findOne({ email: email });
+        res({
+          "result": "success",
+          value: {
+            "code": 0,
+            "message": updatedUser.listfavored
+          }
+        })
+      } catch (error) {
+        rej({
+          "result": "error",
+          "value": {
+            "code": 5,
+            "message": error
+          }
+        })
+        return;
+      }
+    })
+    try {
+      let result = await promise;
+      return result;
+    } catch (error) {
+      return error;
+    }
+  }
 }
 
 export default userDao

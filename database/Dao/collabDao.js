@@ -7,15 +7,26 @@ let collabDao = {
     let promise = new Promise(async (res, rej) => {
       try {
         let userData = await user.findOne({ email: email });
+        if (!userData) {
+          rej({
+            "result": "error",
+            "value": {
+              code: 404,
+              message: "user not found"
+            }
+          })
+          return;
+        }
         let collabId = userData.collabId;
         if (collabId === null) {
-          throw rej({
+          rej({
             "result": "error",
             "value": {
               code: 4,
               message: "no collabs"
             }
           })
+          return;
         }
         let collabs = await collab.findOne({ _id: collabId });
         let listUsers = collabs.listUsers;
@@ -30,7 +41,7 @@ let collabDao = {
               }
             }
           })
-          return
+          return;
         }
 
         let bulkData = await user.find({ email: { $in: listUsers } })
@@ -41,7 +52,8 @@ let collabDao = {
             "id": bulkData[i]._id,
             "email": bulkData[i].email,
             "fullName": bulkData[i].name + " " + bulkData[i].surname,
-            "phoneNumber": bulkData[i].phoneNumber
+            "phoneNumber": bulkData[i].phoneNumber,
+            "listFavored": bulkData[i].listfavored
           }
           // data[bulkData[i].email] = {
           //   "fullName": bulkData[i].name + " " + bulkData[i].surname,
@@ -81,6 +93,8 @@ let collabDao = {
       let email = body.email;
       let collabId = body.collabId;
       let userExistes = await user.findOne({ email: email })
+      let isCollab = await collab.findOne({ _id: collabId });
+      console.log(isCollab);
       if (userExistes) {
         if (userExistes.collabId != null) {
           rej({
@@ -88,6 +102,16 @@ let collabDao = {
             value: {
               "code": 5,
               "message": "user already in a collab",
+            }
+          })
+          return;
+        }
+        if (!isCollab) {
+          rej({
+            result: "error",
+            value: {
+              "code": 9,
+              "message": "collab not found",
             }
           })
           return;
