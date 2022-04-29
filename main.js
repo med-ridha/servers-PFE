@@ -20,6 +20,25 @@ app.get('/checkStatus', (_, res) => {
   res.status(200).json({ "result": "success" });
 })
 
+app.get('/documents/search', async (req, res) => {
+  let result = await documentDao.search(req.query);
+  if (result.result == "success") {
+    res.status(200).json(result.value);
+  } else {
+    res.status(500).json(result.value);
+  }
+})
+
+
+app.post('/documents/cat/search', async (req, res) => {
+  let result = await documentDao.getCategoriesSearch(req.query, req.body);
+  if (result.result == "success") {
+    res.status(200).json(result.value);
+  } else {
+    res.status(500).json(result.value);
+  }
+})
+
 app.post('/modules/cat/latest/:duree', async (req, res) => {
   let result = await modulesDao.getCategoriesLatest(req.params.duree, req.body);
   if (result.result == "success") {
