@@ -96,8 +96,26 @@ app.get('/documents/one/:id', authenticateToken, async (req, res) => {
   }
 })
 
+app.get('/users/one/favorit/:email', authenticateToken, async (req, res) => {
+  let result = await userDao.getDocumentFavored(req.params.email);
+  if (result.result = "success") {
+    res.status(200).json(result.value);
+  } else {
+    res.status(404).json(result.value);
+  }
+})
+
 app.get('/users/one/collabs/:email', authenticateToken, async (req, res) => {
   let result = await collabDao.getCollabs(req.params.email);
+  if (result.result = "success") {
+    res.status(200).json(result.value);
+  } else {
+    res.status(404).json(result.value);
+  }
+})
+
+app.get('/users/one/searchH/:email', authenticateToken, async (req, res) => {
+  let result = await userDao.getSearchH(req.params.email);
   if (result.result = "success") {
     res.status(200).json(result.value);
   } else {
@@ -148,6 +166,15 @@ app.post('/documents/add', authenticateToken, async (req, res) => {
 
 app.put('/documents/update', authenticateToken, async (req, res) => {
   let result = await documentDao.updateDocument(req.body);
+  if (result.result = "success") {
+    res.status(200).json(result.value);
+  } else {
+    res.status(404).json(result.value);
+  }
+})
+
+app.get('/search/all', authenticateToken, async (_, res) => {
+  let result = await documentDao.getSearchAll();
   if (result.result = "success") {
     res.status(200).json(result.value);
   } else {

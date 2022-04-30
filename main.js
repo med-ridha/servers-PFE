@@ -56,8 +56,8 @@ app.get('/modules/latest/:duree', async (req, res) => {
     res.status(500).json(result.value);
   }
 })
-app.post("/users/getListFavored", async (req, res) => {
-  let result = await userDao.getListFavored(req.body.email)
+app.get("/users/getListFavored/:email", async (req, res) => {
+  let result = await userDao.getListFavored(req.params.email)
   if (result.result === "success") {
     res.status(200).json(result.value)
   } else {

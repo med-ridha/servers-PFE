@@ -5,14 +5,45 @@ import documentDao from './documentDao.js';
 import documents from '../module/document.js'
 import collabDao from './collabDao.js';
 import collab from '../module/collab.js'
+import search from '../module/search.js'
 
 let saltRounds = 9;
 
 let userDao = {
-  getListFavored: async function(email) {
+  getSearchH: async function(email) {
+    let promise = new Promise(async (res, rej) => {
+      let searchH = [];
+      try {
+        searchH = await search.find({ email: email });
+        res({
+          "result": "success",
+          "value": {
+            "code": 0,
+            "message": searchH 
+          }
+        })
+      } catch (error) {
+        rej({
+          "result": "error",
+          "value": {
+            "code": 500,
+            "message": err
+          }
+        })
+        return;
+      }
+    })
+    try {
+      let result = await promise;
+      return result;
+    } catch (err) {
+      return err;
+    }
+  },
+  getDocumentFavored: async function(email) {
     let promise = new Promise(async (res, rej) => {
       try {
-        let oneUser = user.findOne({ email: email });
+        let oneUser = await user.findOne({ email: email });
         if (!oneUser) {
           rej({
             "result": "error",
@@ -23,8 +54,52 @@ let userDao = {
           })
           return;
         }
-        let listFavored = [];
-        listFavored = oneUser.listfavored;
+        let listFavored = oneUser.listfavored;
+        let docFavored = await documents.find({ _id: { $in: listFavored } })
+
+
+        res({
+          "result": "success",
+          "value": {
+            "code": 0,
+            "message": docFavored
+          }
+        })
+
+      } catch (error) {
+        rej({
+          "result": "error",
+          "value": {
+            "code": 500,
+            "message": err
+          }
+        })
+        return;
+      }
+    })
+    try {
+      let result = await promise;
+      return result;
+    } catch (err) {
+      return err;
+    }
+  },
+  getListFavored: async function(email) {
+    let promise = new Promise(async (res, rej) => {
+      try {
+        let oneUser = await user.findOne({ email: email });
+        console.log(oneUser)
+        if (!oneUser) {
+          rej({
+            "result": "error",
+            "value": {
+              "code": 500,
+              "message": err
+            }
+          })
+          return;
+        }
+        let listFavored = oneUser.listfavored;
         res({
           "result": "success",
           "value": {

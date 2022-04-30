@@ -5,11 +5,30 @@ import userModule from '../module/user.js'
 import modules from '../module/module.js'
 import searchDoc from '../module/search.js'
 import firebase from '../../firebase/service.js'
+import searchModule from '../module/search.js'
 //import { Client } from '@elastic/elasticsearch'
 
 //const client = new Client({ node: 'http://localhost:9200' })
 
 let documentDao = {
+  getSearchAll: async function() {
+    let promise = new Promise(async (res, rej) => {
+      try {
+        let searches = await searchModule.find({});
+        res({ "result": 'success', value: { code: 0, message: searches } })
+      } catch (error) {
+        console.log(error);
+        rej({ "result": "error", "value": { code: 1, message: error } })
+      }
+    })
+    try {
+      let result = await promise;
+      return result;
+    } catch (err) {
+      return err;
+    }
+  },
+
   checkDocument: async function(body) {
     let titleFr = body.titleFr ?? null;
     let titleAr = body.titleAr ?? null;
@@ -17,7 +36,6 @@ let documentDao = {
     let bodyAr = body.bodyAr ?? null;
     let promise = new Promise(async (res, rej) => {
       try {
-
         let result = await documents.find({
           $or: [
             { titleFr: titleFr },
@@ -26,13 +44,14 @@ let documentDao = {
             { bodyAr: bodyAr }
           ]
         })
-
         if (result.length > 0) {
-          for (let doc of result) {
-            if (doc._id.toString() === (body.docId ?? '')) {
-              res({ "result": 'not found', value: { code: 0, message: result } })
+          if (body.docId) {
+            for (let doc of result) {
+              console.log(doc._id.toString() === body.docId)
+              if (doc._id.toString() === body.docId) {
+                res({ "result": 'not found', value: { code: 0, message: result } })
+              }
             }
-
           }
           res({ "result": 'found', value: { code: 0, message: result } })
         }
@@ -370,10 +389,11 @@ let documentDao = {
         else if (!body.exacte) {
           let args = body.search.split(" ");
           for (let word of args) {
-            console.log(word)
-            allDocuments.push(...someDocuments.filter(doc => doc.titleFr.toLowerCase().includes(word.toLowerCase())))
-            allDocuments.push(...someDocuments.filter(doc => doc.titleAr.includes(word)))
-            console.log(allDocuments)
+            if (word.length <= 3) continue;
+            //allDocuments.push(...someDocuments.filter(doc => doc.titleFr.toLowerCase().includes(word.toLowerCase())))
+            //allDocuments.push(...someDocuments.filter(doc => doc.titleAr.includes(word)))
+            allDocuments.push(...someDocuments.filter(doc => doc.titleFr.split(" ").join("").toLowerCase().includes(word.toLowerCase())))
+            allDocuments.push(...someDocuments.filter(doc => doc.titleAr.split(" ").join("").includes(word)))
           }
         }
         let allSearchModules = await modules.find({});
@@ -383,7 +403,6 @@ let documentDao = {
               allDocuments = allDocuments.filter(doc => doc.moduleId == item._id);
               if (body.category) {
                 for (let cat of item.categories) {
-                  console.log(cat.name)
                   if (cat.name == body.category) {
                     allDocuments = allDocuments.filter(doc => doc.categoryId == cat._id);
                   }
@@ -434,7 +453,6 @@ let documentDao = {
             }
           }
         }
-        console.log(data);
         let email = body.email;
         delete body['email'];
         (new searchDoc({
@@ -469,7 +487,6 @@ let documentDao = {
       for (let i = 0; i < categories.length; i++) {
         listCatIds.push(categories[i].id);
       }
-      console.log(listCatIds);
       let apresLe;
       let avantLe;
       if (query.apresLe) apresLe = new Date(query.apresLe).toISOString();
@@ -490,15 +507,12 @@ let documentDao = {
         if (query.exacte) {
           allDocuments = someDocuments.filter(doc => doc.titleFr.toLowerCase().includes(query.search.toLowerCase()))
           allDocuments.push(...someDocuments.filter(doc => doc.titleAr.includes(query.search)))
-          console.log(allDocuments)
         }
         else if (!query.exacte) {
           let args = query.search.split(" ");
           for (let word of args) {
-            console.log(word)
-            allDocuments.push(...someDocuments.filter(doc => doc.titleFr.toLowerCase().includes(word.toLowerCase())))
-            allDocuments.push(...someDocuments.filter(doc => doc.titleAr.includes(word)))
-            console.log(allDocuments)
+            allDocuments.push(...someDocuments.filter(doc => doc.titleFr.split(" ").join("").toLowerCase().includes(word.toLowerCase())))
+            allDocuments.push(...someDocuments.filter(doc => doc.titleAr.split(" ").join("").includes(word)))
           }
         }
         let allSearchModules = await modules.find({});
@@ -508,7 +522,6 @@ let documentDao = {
               allDocuments = allDocuments.filter(doc => doc.moduleId == item._id);
               if (body.category) {
                 for (let cat of item.categories) {
-                  console.log(cat.name)
                   if (cat.name == body.category) {
                     allDocuments = allDocuments.filter(doc => doc.categoryId == cat._id);
                   }
