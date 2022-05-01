@@ -10,6 +10,7 @@ import modulesDao from '../database/Dao/moduleDao.js'
 import collabDao from '../database/Dao/collabDao.js'
 import abonnDao from '../database/Dao/abonnDao.js'
 import jwt from 'jsonwebtoken'
+import adminDao from '../database/Dao/adminDao.js';
 
 let app = express();
 app.use(express.json({ limit: '5mb' }));
@@ -200,22 +201,40 @@ app.get('/documents/all', authenticateToken, async (_, res) => {
   }
 })
 
-app.get('/modules/getAll', async (req, res) => {
+app.get('/modules/getAll', authenticateToken, async (req, res) => {
   let result = await modulesDao.getAll()
-  if (result.result == "success"){
+  if (result.result == "success") {
     res.status(200).json(result.value)
-  }else {
+  } else {
     res.status(500).json(result.value)
   }
 })
 
-app.get('/modules/getModuleById/:id',authenticateToken, async (req, res) => {
+app.get('/modules/getModuleById/:id', authenticateToken, async (req, res) => {
   let result = await modulesDao.getModuleById(req.params.id)
   res.status(200).json(result.value)
 })
 
 
-app.get('/modules/getModule/:id', async (req, res) => {
+app.get('/modules/getModule/:id', authenticateToken, async (req, res) => {
   let result = await modulesDao.getModule(req.params.id)
   res.status(200).json(result.value)
+})
+
+app.post('/auth/checkResetToken', async (req, res) => {
+  try{
+    let result = await adminDao.checkResetToken(req.body);
+    res.status(200).json(result.value);
+  }catch{
+    res.status(500).json(result.value);
+  }
+})
+
+app.post('/auth/checkEmail', async (req, res) => {
+  try{
+    let result = await adminDao.checkEmail(req.body.email);
+    res.status(200).json(result.value);
+  }catch{
+    res.status(500).json(result.value);
+  }
 })
