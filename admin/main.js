@@ -8,8 +8,8 @@ import userDao from '../database/Dao/userDao.js';
 import documentDao from '../database/Dao/documentDao.js'
 import modulesDao from '../database/Dao/moduleDao.js'
 import collabDao from '../database/Dao/collabDao.js'
+import abonnDao from '../database/Dao/abonnDao.js'
 import jwt from 'jsonwebtoken'
-let __dirname = path.resolve(path.dirname(''));
 
 let app = express();
 app.use(express.json({ limit: '5mb' }));
@@ -42,7 +42,7 @@ function authenticateToken(req, res, next) {
 
 app.post("/notification/sendToTopic", async (req, res) => {
   await firebase.sendToTopic(req.body);
-  res.json({ "res": "ok" });
+  res.json({ "res": result });
 })
 
 app.post("/notification/send", async (req, res) => {
@@ -89,6 +89,15 @@ app.get('/users/all', authenticateToken, async (_, res) => {
 
 app.get('/documents/one/:id', authenticateToken, async (req, res) => {
   let result = await documentDao.getOne(req.params.id);
+  if (result.result = "success") {
+    res.status(200).json(result.value);
+  } else {
+    res.status(404).json(result.value);
+  }
+})
+
+app.get('/users/one/abonn/:email', authenticateToken, async (req, res) => {
+  let result = await abonnDao.getAbonn(req.params.email);
   if (result.result = "success") {
     res.status(200).json(result.value);
   } else {
