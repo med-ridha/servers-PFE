@@ -10,16 +10,59 @@ import search from '../module/search.js'
 let saltRounds = 9;
 
 let userDao = {
-  getSearchH: async function(email) {
+  findUser: async function(search) {
     let promise = new Promise(async (res, rej) => {
-      let searchH = [];
       try {
-        searchH = await search.find({ email: email });
+        let result = (await user.find({})).filter(x => x.name.includes(search) || x.surname.includes(search));
         res({
           "result": "success",
           "value": {
             "code": 0,
-            "message": searchH 
+            "message": result
+          }
+        })
+      } catch (error) {
+        console.log(error)
+        rej({
+          "result": "error",
+          "value": {
+            "code": 500,
+            "message": error
+          }
+        })
+        return;
+      }
+    })
+
+    try {
+      let result = await promise;
+      return result;
+    } catch (err) {
+      return err;
+    }
+  },
+  getSearchH: async function(id) {
+    let promise = new Promise(async (res, rej) => {
+      let searchH = [];
+      try {
+        let oneUser = await user.findOne({ _id: id })
+        console.log(oneUser);
+        if (!oneUser) {
+          rej({
+            "result": "error",
+            "value": {
+              "code": 404,
+              "message": "user not found" 
+            }
+          })
+          return;
+        }
+        searchH = await search.find({ email: oneUser.email });
+        res({
+          "result": "success",
+          "value": {
+            "code": 0,
+            "message": searchH
           }
         })
       } catch (error) {
@@ -27,7 +70,7 @@ let userDao = {
           "result": "error",
           "value": {
             "code": 500,
-            "message": err
+            "message": error
           }
         })
         return;
@@ -88,7 +131,6 @@ let userDao = {
     let promise = new Promise(async (res, rej) => {
       try {
         let oneUser = await user.findOne({ email: email });
-        console.log(oneUser)
         if (!oneUser) {
           rej({
             "result": "error",
@@ -165,7 +207,6 @@ let userDao = {
 
       if (usertoDelete.collabId) {
         let result1 = await collab.updateOne({ _id: usertoDelete.collabId }, { $pull: { listUsers: usertoDelete.email } });
-        console.log(result1);
       }
       let result = await user.deleteOne({ _id: body.id })
       if (result.deletedCount > 0) {
@@ -176,7 +217,6 @@ let userDao = {
     })
     try {
       let result = await promise;
-      console.log(result)
       return result;
     } catch (err) {
       console.log(err)

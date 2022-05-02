@@ -19,7 +19,22 @@ let abonnDao = {
         }
         let listAbonn = user.abonnement;
         let abonns = await abonn.find({ _id: { $in: listAbonn } });
-        console.log(abonns);
+        let listExpired = []
+        for (let i = 0; i < abonns.length; i++) {
+          let date = moment.now();
+          if (new Date(abonns[i].dateFinish) < date) {
+            listExpired.push(abonns.splice(i, 1)[0]._id);
+            i--
+          }
+        }
+        listAbonn = [];
+        for (let i = 0; i < abonns.length; i++) {
+          listAbonn.push(abonns[i]._id.toString());
+        }
+        if (listExpired.length > 0) {
+          await abonn.deleteMany({ _id: { $in: listExpired } })
+          await users.updateOne({ email: email }, { $set: { abonnement: listAbonn } })
+        }
         res({
           result: "success",
           value: {
@@ -63,14 +78,13 @@ let abonnDao = {
         let duree = body.duree;
 
         (new abonn({
-          userEmail: userEmail,
+          email: userEmail,
           modules: body.modules.substring(1, body.modules.length - 1).split(",").map(item => item.trim()),
           dateStart: moment.now(),
           dateFinish: moment.now() + (31540000000 * duree),
           montant: Number(body.montant)
         })).save().then(async (result) => {
-          let userUpdateResult = await users.updateOne({ email: userEmail }, { $push: { abonnement: result._id } })
-          console.log(userUpdateResult)
+          await users.updateOne({ email: userEmail }, { $push: { abonnement: result._id } })
           let finalResult = await users.findOne({ email: userEmail });
           res({
             result: "success",

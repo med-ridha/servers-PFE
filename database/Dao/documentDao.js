@@ -11,7 +11,38 @@ import searchModule from '../module/search.js'
 //const client = new Client({ node: 'http://localhost:9200' })
 
 let documentDao = {
-  getSearchAll: async function() {
+  findDocument: async function(body) {
+    let promise = new Promise(async (res, rej) => {
+      try {
+        let allDocuments = [];
+        if (body.search) {
+          allDocuments = (await documents.find({})).filter(doc => doc.titleFr.toLowerCase().includes(body.search.toLowerCase()));
+          if (body.module && body.module.length > 0) {
+            let mod = await modules.findOne({ id: body.module });
+            allDocuments = allDocuments.filter(doc => doc.moduleId.toString() === mod._id.toString())
+          }
+          console.log(allDocuments.length)
+        } else if (body.module && body.module.length > 0) {
+          let mod = await modules.findOne({ id: body.module });
+          allDocuments = (await documents.find({})).filter(doc => doc.moduleId.toString() === mod._id.toString());
+        } else {
+          allDocuments = await documents.find({})
+        }
+
+        res({ "result": 'success', value: { code: 0, message: allDocuments } })
+      } catch (error) {
+        console.log(error);
+        rej({ "result": "error", "value": { code: 1, message: error } })
+      }
+    })
+    try {
+      let result = await promise;
+      return result;
+    } catch (err) {
+      return err;
+    }
+  },
+  getSearchHAll: async function() {
     let promise = new Promise(async (res, rej) => {
       try {
         let searches = await searchModule.find({});
@@ -47,7 +78,6 @@ let documentDao = {
         if (result.length > 0) {
           if (body.docId) {
             for (let doc of result) {
-              console.log(doc._id.toString() === body.docId)
               if (doc._id.toString() === body.docId) {
                 res({ "result": 'not found', value: { code: 0, message: result } })
               }
@@ -192,7 +222,6 @@ let documentDao = {
     })
     try {
       let result = await promise;
-      console.log(result)
       return result;
     } catch (err) {
       console.log(err)
@@ -234,7 +263,6 @@ let documentDao = {
 
         if (!found) {
           let result = await modulesDao.addCategory(moduleNum, categoryName)
-          console.log(result.value.message)
           categoryId = result.value.message;
         } else {
           console.log('category exists')
@@ -268,7 +296,6 @@ let documentDao = {
             });
           });
       } catch (error) {
-        console.log("already there")
         console.log(error)
         rej({ result: "error", value: { code: 2, message: error } })
       }
@@ -276,7 +303,6 @@ let documentDao = {
 
     try {
       let result = await promise;
-      console.log(result)
       return result;
     } catch (err) {
       console.log(err)
@@ -318,12 +344,8 @@ let documentDao = {
         }
         if (!found) {
           let result = await modulesDao.addCategory(moduleNum, categoryName)
-          console.log(result.value.message)
           categoryId = result.value.message;
-        } else {
-          console.log('category exists')
         }
-
 
         let data = {
           titleFr: payload.titleFr,
@@ -353,7 +375,6 @@ let documentDao = {
 
     try {
       let result = await promise;
-      console.log(result)
       return result;
     } catch (err) {
       console.log(err)
@@ -440,9 +461,18 @@ let documentDao = {
                       if (listCategories[q].id == cat._id) found = true;
                     }
                     if (found == false)
-                      listCategories.push({ name: cat.name, id: cat._id });
+                      listCategories.push({ name: cat.name, id: cat._id, });
                   }
                 }
+              }
+              for (let q = 0; q < listCategories.length; q++) {
+                let listDocumentIds = [];
+                for (let doc of allDocuments) {
+                  if (listCategories[q].id.toString() === doc.categoryId.toString()) {
+                    listDocumentIds.push(doc._id)
+                  }
+                }
+                listCategories[q]['documentsIds'] = listDocumentIds;
               }
               for (let j = 0; j < data.length; j++) {
                 if (data[j].name == allModules[i].name) {
@@ -478,94 +508,6 @@ let documentDao = {
     }
 
   },
-
-  getCategoriesSearch: async function(query, body) {
-    let promise = new Promise(async (res, rej) => {
-      let categories = body.categories;
-      let listCatIds = [];
-      for (let i = 0; i < categories.length; i++) {
-        listCatIds.push(categories[i].id);
-      }
-      let apresLe;
-      let avantLe;
-      if (query.apresLe) apresLe = new Date(query.apresLe).toISOString();
-      if (query.avantLe) avantLe = new Date(query.avantLe).toISOString();
-      try {
-        //let allDocuments = await documents.find({ titleFr: { "$regex": query.search.toLowerCase() } })
-        let someDocuments = [];
-        if (query.avantLe && query.apresLe) {
-          someDocuments = await documents.find({ datePublished: { $gt: apresLe, $lt: avantLe } });
-        } else if (query.avantLe) {
-          someDocuments = await documents.find({ datePublished: { $lt: avantLe } });
-        } else if (query.apresLe) {
-          someDocuments = await documents.find({ datePublished: { $gt: apresLe } });
-        } else {
-          someDocuments = await documents.find({});
-        }
-        let allDocuments = [];
-        if (query.exacte) {
-          allDocuments = someDocuments.filter(doc => doc.titleFr.toLowerCase().includes(query.search.toLowerCase()))
-          allDocuments.push(...someDocuments.filter(doc => doc.titleAr.includes(query.search)))
-        }
-        else if (!query.exacte) {
-          let args = query.search.split(" ");
-          for (let word of args) {
-            allDocuments.push(...someDocuments.filter(doc => doc.titleFr.split(" ").join("").toLowerCase().includes(word.toLowerCase())))
-            allDocuments.push(...someDocuments.filter(doc => doc.titleAr.split(" ").join("").includes(word)))
-          }
-        }
-        let allSearchModules = await modules.find({});
-        if (body.module) {
-          for (let item of allSearchModules) {
-            if (item.name == body.module) {
-              allDocuments = allDocuments.filter(doc => doc.moduleId == item._id);
-              if (body.category) {
-                for (let cat of item.categories) {
-                  if (cat.name == body.category) {
-                    allDocuments = allDocuments.filter(doc => doc.categoryId == cat._id);
-                  }
-                }
-              }
-            }
-          }
-        }
-        let cats = await modules.findOne({ "categories._id": { $in: listCatIds } })
-        let r = [];
-        for (let item of cats.categories) {
-          if (listCatIds.includes(item._id.toString())) {
-            r.push(item)
-          }
-        }
-        for (let i = 0; i < r.length; i++) {
-          r[i].documentsIds = [];
-          for (let j = 0; j < allDocuments.length; j++) {
-            if (allDocuments[j].categoryId == r[i]._id) {
-              r[i].documentsIds.push(allDocuments[j]._id)
-            }
-          }
-        }
-        res({ result: "success", value: { code: 0, message: r } })
-      } catch (error) {
-        console.log(error);
-        rej({
-          result: "error",
-          value: {
-            code: 1,
-            message: error
-          }
-        });
-      }
-
-    })
-
-    try {
-      let result = await promise;
-      return result;
-    } catch (error) {
-      return error;
-    }
-  },
-
 }
 
 

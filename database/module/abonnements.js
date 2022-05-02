@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
 
 const abonnementSchema = new mongoose.Schema({
-  userEmail: {type: String, required: true},
+  email: {type: String, required: true},
   modules: {type: Array, required: true},
   dateStart: {type: Date, required: true},
   dateFinish: {type: Date, required: true},
