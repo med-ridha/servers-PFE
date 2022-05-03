@@ -59,61 +59,57 @@ let collabDao = {
     }
   },
 
-  addToCollab: async function(body) {
+  addUserToCollab: async function(collabId, email) {
     let promise = new Promise(async (res, rej) => {
-      let email = body.email;
-      let collabId = body.collabId;
-      let userExistes = await user.findOne({ email: email })
-      let isCollab = await collab.findOne({ _id: collabId });
-      console.log(isCollab);
-      if (userExistes) {
-        if (userExistes.collabId != null) {
-          rej({
-            result: "error",
-            value: {
-              "code": 5,
-              "message": "user already in a collab",
-            }
-          })
-          return;
-        }
-        if (!isCollab) {
-          rej({
-            result: "error",
-            value: {
-              "code": 9,
-              "message": "collab not found",
-            }
-          })
-          return;
-        }
-        try {
-          await user.updateOne({ _id: userExistes._id }, { collabId: collabId })
-          await collab.updateOne({ _id: collabId }, { $push: { listUsers: email } });
-          res({
-            result: "success",
-            value: {
-              code: 0,
-              message: "add to collab"
-            }
-          })
-        } catch (err) {
-          console.log(err)
-          rej({
-            result: "error",
-            value: {
-              code: 500,
-              message: "something went wrong"
-            }
-          })
-        }
-
-      } else {
+      try {
+        await collab.updateOne({ _id: collabId }, { $push: { listUsers: email } });
+        res({
+          result: "success",
+          value: {
+            code: 0,
+            message: "add to collab"
+          }
+        })
+      } catch (err) {
+        console.log(err)
         rej({
           result: "error",
           value: {
-            code: 404,
-            message: "user not found"
+            code: 500,
+            message: "something went wrong"
+          }
+        })
+      }
+    })
+
+    try {
+      let result = await promise;
+      return result;
+    } catch (err) {
+      return err;
+    }
+  },
+
+  deleteUserCollab: async function(userToDelete, emailToDelete, collabId) {
+    let promise = new Promise(async (res, rej) => {
+      try {
+        await user.updateOne({ _id: userToDelete._id }, { $set: { collabId: null } })
+        await collab.updateOne({ _id: collabId }, { $pull: { listUsers: emailToDelete } });
+        res({
+          result: "success",
+          value: {
+            code: 0,
+            message: "deleted from collab"
+          }
+        })
+
+      } catch (error) {
+        console.log(error)
+        rej({
+          result: "error",
+          value: {
+            code: 1,
+            message: JSON.stringify(error)
           }
         })
       }
@@ -126,41 +122,8 @@ let collabDao = {
     }
   },
 
-  deleteCollab: async function(body) {
-    let promise = new Promise(async (res, rej) => {
-      let email = body.email;
-      let emailToDelete = body.userToDelete;
-      let thisUser = await user.findOne({ email: email });
-      let userToDelete = await user.findOne({ email: emailToDelete })
-      if (!thisUser || !userToDelete) {
-        rej({
-          result: "error",
-          value: {
-            code: 4,
-            message: "not found"
-          }
-        })
-        return;
-      }
 
-      let collabId = thisUser.collabId;
-      let result = await user.updateOne({ _id: userToDelete._id }, { $set: { collabId: null } })
-      await collab.updateOne({ _id: collabId }, { $pull: { listUsers: emailToDelete } });
-      res({
-        result: "success",
-        value: {
-          code: 0,
-          message: "deleted from collab"
-        }
-      })
-    })
-    try {
-      let result = await promise;
-      return result;
-    } catch (err) {
-      return err;
-    }
-  },
+
   createCollab: async function(body) {
     let promise = new Promise((res, rej) => {
       let email = body.email;

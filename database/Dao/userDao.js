@@ -10,6 +10,140 @@ import search from '../module/search.js'
 let saltRounds = 9;
 
 let userDao = {
+  isUserCollab: async function(user) {
+    return user.collabId == null;
+  },
+  isUserExiste: async function(email) {
+    let userExistes = await user.findOne({ email: email })
+    return userExistes != null;
+  },
+  addToCollab: async function(body) {
+    let promise = new Promise(async (res, rej) => {
+      let email = body.email;
+      let collabId = body.collabId;
+      let isCollab = await collab.findOne({ _id: collabId });
+      let userExistes = await this.isUserExiste(body.email);
+      let oneUser;
+      if (userExistes) {
+        oneUser = await user.findOne({ email: email });
+        let r = await this.isUserCollab(oneUser)
+        console.log(r)
+        if (!r) {
+          rej({
+            result: "error",
+            value: {
+              "code": 5,
+              "message": "user already in a collab",
+            }
+          })
+          return;
+        }
+        if (!isCollab) {
+          rej({
+            result: "error",
+            value: {
+              "code": 9,
+              "message": "collab not found",
+            }
+          })
+          return;
+        }
+        try {
+          await user.updateOne({ _id: oneUser._id }, { collabId: collabId })
+          let result = await collabDao.addUserToCollab(collabId, email);
+          if (result.result === "success") {
+            res({
+              result: "success",
+              value: {
+                code: 0,
+                message: "add to collab"
+              }
+            })
+          } else {
+            rej({
+              result: "error",
+              value: {
+                code: 1,
+                message: "something went wrong"
+              }
+            })
+
+          }
+        } catch (err) {
+          console.log(err)
+          rej({
+            result: "error",
+            value: {
+              code: 500,
+              message: "something went wrong"
+            }
+          })
+        }
+
+      } else {
+        rej({
+          result: "error",
+          value: {
+            code: 404,
+            message: "user not found"
+          }
+        })
+      }
+    })
+    try {
+      let result = await promise;
+      return result;
+    } catch (err) {
+      return err;
+    }
+  },
+  deleteCollab: async function(body) {
+    let promise = new Promise(async (res, rej) => {
+      let email = body.email;
+      let emailToDelete = body.userToDelete;
+      let thisUser = await user.findOne({ email: email });
+      let userToDelete = await user.findOne({ email: emailToDelete })
+      if (!thisUser || !userToDelete) {
+        rej({
+          result: "error",
+          value: {
+            code: 4,
+            message: "not found"
+          }
+        })
+        return;
+      }
+
+      let collabId = thisUser.collabId;
+      let result = await collabDao.deleteUserCollab(userToDelete, emailToDelete, collabId);
+      if (result.result === "success") {
+        res({
+          result: "success",
+          value: {
+            code: 0,
+            message: "deleted from collab"
+          }
+        })
+      } else {
+        rej({
+          result: "error",
+          value: {
+            code: 3,
+            message: "something went wrong"
+          }
+        })
+        return;
+      }
+    })
+    try {
+      let result = await promise;
+      return result;
+    } catch (err) {
+      return err;
+    }
+  },
+
+
   getCollabs: async function(email) {
     let promise = new Promise(async (res, rej) => {
       try {

@@ -120,7 +120,7 @@ app.get('/modules/getAll', async (_, res) => {
 })
 
 app.post("/deleteCollab", async (req, res) => {
-  let result = await collabDao.deleteCollab(req.body)
+  let result = await userDao.deleteCollab(req.body)
   if (result.result === "success") {
     res.status(200).json(result.value)
   } else {
@@ -243,7 +243,7 @@ app.post("/updateUser", async (req, res) => {
 })
 
 app.post("/addToCollab", async (req, res) => {
-  let result = await collabDao.addToCollab(req.body)
+  let result = await userDao.addToCollab(req.body)
   if (result.result === "success") {
     res.status(200).json(result.value)
   } else if (result.value.code === 5) {
