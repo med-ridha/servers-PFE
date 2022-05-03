@@ -3,31 +3,9 @@ import user from '../module/user.js';
 import moment from 'moment'
 
 let collabDao = {
-  getCollabs: async function(email) {
+  getCollabs: async function(collabId) {
     let promise = new Promise(async (res, rej) => {
       try {
-        let userData = await user.findOne({ email: email });
-        if (!userData) {
-          rej({
-            "result": "error",
-            "value": {
-              code: 404,
-              message: "user not found"
-            }
-          })
-          return;
-        }
-        let collabId = userData.collabId;
-        if (collabId === null) {
-          rej({
-            "result": "error",
-            "value": {
-              code: 4,
-              message: "no collabs"
-            }
-          })
-          return;
-        }
         let collabs = await collab.findOne({ _id: collabId });
         let listUsers = collabs.listUsers;
         if (listUsers.length == 0) {
@@ -43,7 +21,6 @@ let collabDao = {
           })
           return;
         }
-
         let bulkData = await user.find({ email: { $in: listUsers } })
         let data = []
         let one = {}
@@ -55,13 +32,7 @@ let collabDao = {
             "phoneNumber": bulkData[i].phoneNumber,
             "listFavored": bulkData[i].listfavored
           }
-          // data[bulkData[i].email] = {
-          //   "fullName": bulkData[i].name + " " + bulkData[i].surname,
-          //   "phoneNumber": bulkData[i].phoneNumber
-          // }
         }
-        console.log(data);
-
         res({
           "result": "success",
           "value": {

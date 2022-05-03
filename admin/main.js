@@ -42,7 +42,7 @@ function authenticateToken(req, res, next) {
 
 
 app.post("/notification/sendToTopic", async (req, res) => {
-  await firebase.sendToTopic(req.body);
+  let result = await firebase.sendToTopic(req.body);
   res.json({ "res": result });
 })
 

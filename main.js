@@ -19,7 +19,17 @@ app.listen(PORT, '0.0.0.0', () => {
 app.get('/checkStatus', (_, res) => {
   res.status(200).json({ "result": "success" });
 })
-
+app.post('/users/check', async (req, res) => {
+  let result = await userDao.check(req.body);
+  console.log(result);
+  if (result.result === "success") {
+    res.status(200).json(result.value.message);
+  } else if (result.value.code === 404) {
+    res.status(404).json(result.value.message);
+  } else {
+    res.status(500).json(result.value.message);
+  }
+})
 app.get('/documents/search', async (req, res) => {
   let result = await documentDao.search(req.query);
   if (result.result == "success") {
@@ -267,7 +277,7 @@ app.get("/users/abonns/:email", async (req, res) => {
 })
 
 app.get("/getCollabs/:email", async (req, res) => {
-  let result = await collabDao.getCollabs(req.params.email);
+  let result = await userDao.getCollabs(req.params.email);
   if (result.result === "success") {
     res.status(200).json(result.value);
   } else {

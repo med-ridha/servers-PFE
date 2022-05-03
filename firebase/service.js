@@ -43,6 +43,11 @@ let firebase = {
         title: data.title,
         body: data.body
       },
+      data: {
+        "id": data.id.toString(),
+        "module":data.module.toString(),
+        "category": data.category.toString()
+      },
       android: {
         notification: {
           image: data.image,
@@ -63,6 +68,7 @@ let firebase = {
     };
     let res = await admin.messaging().send(message)
     console.log(res);
+    return res;
   }
 }
 

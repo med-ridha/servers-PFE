@@ -280,7 +280,8 @@ let documentDao = {
         })).save()
           .then(async result => {
             await modulesDao.addDocToCat(moduleId, categoryId, result._id);
-            await firebase.sendToTopic({ title: "new document", body: result.titleFr.substring(0, result.titleFr.length / 2) + '...' })
+            let mod = await modules.findOne({ _id: moduleId });
+            await firebase.sendToTopic({ title: `Nouveau document ${mod.name}`, body: result.titleFr, id: result._id, module: mod.name, category: categoryName })
             res({
               "result": "success",
               "value": {

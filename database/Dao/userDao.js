@@ -10,6 +10,115 @@ import search from '../module/search.js'
 let saltRounds = 9;
 
 let userDao = {
+  getCollabs: async function(email) {
+    let promise = new Promise(async (res, rej) => {
+      try {
+        let userData = await user.findOne({ email: email });
+        if (!userData) {
+          rej({
+            "result": "error",
+            "value": {
+              code: 404,
+              message: "user not found"
+            }
+          })
+          return;
+        }
+        let collabId = userData.collabId;
+        if (collabId === null) {
+          rej({
+            "result": "error",
+            "value": {
+              code: 4,
+              message: "no collabs"
+            }
+          })
+          return;
+        }
+        let collab = await collabDao.getCollabs(collabId);
+        if (collab.result === "success") {
+          res({
+            "result": "success",
+            "value": {
+              code: 0,
+              message: {
+                "collab": collab.value.message.collab,
+                "listUsers": collab.value.message.listUsers,
+              }
+            }
+          })
+        } else {
+          rej({
+            "result": "error",
+            "value": {
+              code: 1,
+              message: "error"
+            }
+          })
+
+        }
+      } catch (err) {
+        console.log(err);
+        rej({
+          "result": "error",
+          "value": err
+        })
+      }
+    });
+
+    try {
+      let result = await promise;
+      return result;
+    } catch (err) {
+      return err;
+    }
+  },
+
+
+  check: async function(body) {
+    let promise = new Promise(async (res, rej) => {
+      try {
+        let oneUser = await user.findOne({ email: body.email })
+        if (!oneUser) {
+          rej({
+            "result": "error",
+            "value": {
+              "code": 404,
+              "message": "user not found"
+            }
+          })
+          return;
+        } else {
+          await user.updateOne({ email: body.email }, { $set: { notifId: body.notifId } })
+        }
+        res({
+          "result": "success",
+          "value": {
+            "code": 0,
+            "message": oneUser,
+          }
+        })
+
+      } catch (error) {
+        console.log(error)
+        rej({
+          "result": "error",
+          "value": {
+            "code": 500,
+            "message": error
+          }
+        })
+        return;
+      }
+    })
+    try {
+      let result = await promise;
+      return result;
+    } catch (err) {
+      return err;
+    }
+  },
+
   findUser: async function(search) {
     let promise = new Promise(async (res, rej) => {
       try {
@@ -41,6 +150,7 @@ let userDao = {
       return err;
     }
   },
+
   getSearchH: async function(id) {
     let promise = new Promise(async (res, rej) => {
       let searchH = [];
@@ -52,7 +162,7 @@ let userDao = {
             "result": "error",
             "value": {
               "code": 404,
-              "message": "user not found" 
+              "message": "user not found"
             }
           })
           return;
@@ -83,6 +193,7 @@ let userDao = {
       return err;
     }
   },
+
   getDocumentFavored: async function(email) {
     let promise = new Promise(async (res, rej) => {
       try {
@@ -127,6 +238,7 @@ let userDao = {
       return err;
     }
   },
+
   getListFavored: async function(email) {
     let promise = new Promise(async (res, rej) => {
       try {
@@ -168,6 +280,7 @@ let userDao = {
       return err;
     }
   },
+
   getOne: async function(id) {
     let promise = new Promise(async (res, rej) => {
       try {
@@ -197,6 +310,7 @@ let userDao = {
       return err;
     }
   },
+
   deleteUser: async function(body) {
     let promise = new Promise(async (res, rej) => {
       let usertoDelete = await user.findOne({ _id: body.id })
@@ -206,7 +320,7 @@ let userDao = {
       }
 
       if (usertoDelete.collabId) {
-        let result1 = await collab.updateOne({ _id: usertoDelete.collabId }, { $pull: { listUsers: usertoDelete.email } });
+        await collab.updateOne({ _id: usertoDelete.collabId }, { $pull: { listUsers: usertoDelete.email } });
       }
       let result = await user.deleteOne({ _id: body.id })
       if (result.deletedCount > 0) {
@@ -613,6 +727,7 @@ let userDao = {
       return error;
     }
   },
+
   addDocToFav: async function(body) {
     let promise = new Promise(async (res, rej) => {
       let email = body.email;
@@ -677,6 +792,7 @@ let userDao = {
       return error;
     }
   },
+
   removeDocFromFav: async function(body) {
     let promise = new Promise(async (res, rej) => {
       let email = body.email;
