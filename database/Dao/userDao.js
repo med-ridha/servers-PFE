@@ -27,7 +27,6 @@ let userDao = {
       if (userExistes) {
         oneUser = await user.findOne({ email: email });
         let r = await this.isUserCollab(oneUser)
-        console.log(r)
         if (!r) {
           rej({
             result: "error",
@@ -290,7 +289,6 @@ let userDao = {
       let searchH = [];
       try {
         let oneUser = await user.findOne({ _id: id })
-        console.log(oneUser);
         if (!oneUser) {
           rej({
             "result": "error",
@@ -694,7 +692,6 @@ let userDao = {
         let result = await bcrypt.compare(password, hash);
         if (result) {
           let token = await tokenDao.createToken(email);
-          console.log(token);
           res({
             "result": "success",
             "value": {

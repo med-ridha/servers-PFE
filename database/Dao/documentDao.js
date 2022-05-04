@@ -21,7 +21,6 @@ let documentDao = {
             let mod = await modules.findOne({ id: body.module });
             allDocuments = allDocuments.filter(doc => doc.moduleId.toString() === mod._id.toString())
           }
-          console.log(allDocuments.length)
         } else if (body.module && body.module.length > 0) {
           let mod = await modules.findOne({ id: body.module });
           allDocuments = (await documents.find({})).filter(doc => doc.moduleId.toString() === mod._id.toString());

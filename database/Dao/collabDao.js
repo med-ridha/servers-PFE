@@ -136,7 +136,6 @@ let collabDao = {
         creator: email
       })).save()
         .then(async result => {
-          console.log(result._id)
           let data = {
             collabId: result._id
           }

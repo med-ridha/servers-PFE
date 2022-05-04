@@ -36,7 +36,6 @@ let modulesDao = {
     let promise = new Promise(async (res, rej) => {
       let mod = await modules.findOne({ _id: moduleId })
       let numDoc = mod.numDoc - 1;
-      console.log(numDoc)
       try {
         await modules.findOneAndUpdate({ _id: moduleId, "categories._id": categorieId }, { "$pull": { "categories.$.documentsIds": documentId } })
         let finalResult = await modules.updateOne({ _id: moduleId }, { '$set': { numDoc: numDoc } })
@@ -47,7 +46,6 @@ let modulesDao = {
     })
     try {
       let result = await promise;
-      console.log(result)
       return result;
     } catch (error) {
       console.log(error)
@@ -58,7 +56,6 @@ let modulesDao = {
     let promise = new Promise(async (res, rej) => {
       let mod = await modules.findOne({ _id: moduleId })
       let numDoc = mod.numDoc + 1;
-      console.log(numDoc)
       try {
         await modules.findOneAndUpdate({ _id: moduleId, "categories._id": categorieId },
           { "$push": { "categories.$.documentsIds": documentId } })
@@ -70,7 +67,6 @@ let modulesDao = {
     })
     try {
       let result = await promise;
-      console.log(result)
       return result;
     } catch (error) {
       console.log(error)
@@ -84,7 +80,6 @@ let modulesDao = {
         if (!result) rej({ result: "error", value: { code: 2, message: "module not found" } })
         await modules.updateOne({ id: id }, { $push: { categories: { name: name } } })
         let updated = await modules.findOne({ id: id });
-        console.log(updated);
         for (let category of updated.categories) {
           if (category.name === name)
             res({ "result": "success", value: { code: 0, message: category._id } })
@@ -297,7 +292,6 @@ let modulesDao = {
             }
           }
         }
-        console.log(data);
         res({ result: "success", value: { code: 0, message: data } })
       } catch (error) {
         console.log(error);

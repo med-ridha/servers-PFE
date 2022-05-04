@@ -16,12 +16,15 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`app server listening on PORT ${PORT}`);
 })
 
+app.get('/', (_, res) => {
+  res.status(200).json({ "ok": "ok" });
+})
+
 app.get('/checkStatus', (_, res) => {
   res.status(200).json({ "result": "success" });
 })
 app.post('/users/check', async (req, res) => {
   let result = await userDao.check(req.body);
-  console.log(result);
   if (result.result === "success") {
     res.status(200).json(result.value.message);
   } else if (result.value.code === 404) {
@@ -217,7 +220,6 @@ app.post("/login", async (req, res) => {
 
 app.post("/createUser", async (req, res) => {
   let result = await userDao.createUser(req.body)
-  console.log(result.value);
   if (result.result === "success") {
     res.status(200).json(result.value)
   } else {
@@ -268,7 +270,6 @@ app.post("/createCollab", async (req, res) => {
 
 app.get("/users/abonns/:email", async (req, res) => {
   let result = await abonnDao.getAbonn(req.params.email);
-  console.log(result);
   if (result.result === "success") {
     res.status(200).json(result.value);
   } else {
