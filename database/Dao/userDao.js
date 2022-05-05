@@ -371,7 +371,7 @@ let userDao = {
     }
   },
 
-  getListFavored: async function(email) {
+  showFavored: async function(email) {
     let promise = new Promise(async (res, rej) => {
       try {
         let oneUser = await user.findOne({ email: email });
