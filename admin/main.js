@@ -11,6 +11,7 @@ import collabDao from '../database/Dao/collabDao.js'
 import abonnDao from '../database/Dao/abonnDao.js'
 import jwt from 'jsonwebtoken'
 import adminDao from '../database/Dao/adminDao.js';
+import elastic from '../elasticsearch/elastic.js';
 
 let app = express();
 app.use(express.json({ limit: '5mb' }));
@@ -40,6 +41,12 @@ function authenticateToken(req, res, next) {
   })
 }
 
+
+app.get("/feedElastic/:search", async (req, res) => {
+  let result = await elastic.search(req.params.search);
+  console.log(result)
+  res.json({ "res": result });
+})
 
 app.post("/notification/sendToTopic", async (req, res) => {
   let result = await firebase.sendToTopic(req.body);

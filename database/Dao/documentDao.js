@@ -6,11 +6,30 @@ import modules from '../module/module.js'
 import searchDoc from '../module/search.js'
 import firebase from '../../firebase/service.js'
 import searchModule from '../module/search.js'
-//import { Client } from '@elastic/elasticsearch'
-
-//const client = new Client({ node: 'http://localhost:9200' })
-
+import elastic from '../../elasticsearch/elastic.js'
+let i = 1;
 let documentDao = {
+  feedElastic: async function() {
+    let promise = new Promise(async (res, rej) => {
+      try {
+        let docs = await documents.find({});
+        i++;
+        await elastic.addDocuments(docs[0]);
+        console.log(i);
+        res({ ok: "ok" });
+      } catch (error) {
+        console.log(error);
+        rej({ "result": "error", "value": { code: 1, message: error } })
+      }
+
+    })
+    try {
+      let result = await promise;
+      return result;
+    } catch (err) {
+      return err;
+    }
+  },
   findDocument: async function(body) {
     let promise = new Promise(async (res, rej) => {
       try {
@@ -211,6 +230,7 @@ let documentDao = {
           return
         }
         await userModule.updateMany({ listfavored: { $all: [documentId] } }, { $pull: { listfavored: documentId } });
+        await elastic.deleteDocument(documentId);
         let r2 = await documents.findOneAndDelete({ _id: documentId })
         res({ "result": 'success', value: { code: 0, result: r2 } })
 
@@ -279,6 +299,7 @@ let documentDao = {
         })).save()
           .then(async result => {
             await modulesDao.addDocToCat(moduleId, categoryId, result._id);
+            await elastic.addDocument(result);
             let mod = await modules.findOne({ _id: moduleId });
             await firebase.sendToTopic({ title: `Nouveau document ${mod.name}`, body: result.titleFr, id: result._id, module: mod.name, category: categoryName })
             res({
@@ -360,6 +381,8 @@ let documentDao = {
 
         let updateResult = await documents.updateOne({ _id: docId }, data)
         if (updateResult.modifiedCount == 1) {
+          let updateDocument = await documents.findOne({ _id: docId });
+          await elastic.addDocument(updateDocument);
           await modulesDao.remDocFromCat(doc.moduleId, doc.categoryId, doc._id);
           await modulesDao.addDocToCat(moduleId, categoryId, doc._id);
         }
@@ -390,7 +413,6 @@ let documentDao = {
       if (body.apresLe) apresLe = new Date(body.apresLe).toISOString();
       if (body.avantLe) avantLe = new Date(body.avantLe).toISOString();
       try {
-        //let allDocuments = await documents.find({ titleFr: { "$regex": body.search.toLowerCase() } })
         let someDocuments = [];
         if (body.avantLe && body.apresLe) {
           someDocuments = await documents.find({ datePublished: { $gt: apresLe, $lt: avantLe } });
@@ -403,18 +425,22 @@ let documentDao = {
         }
         let allDocuments = [];
         if (body.exacte) {
-          allDocuments = someDocuments.filter(doc => doc.titleFr.toLowerCase().includes(body.search.toLowerCase()))
-          allDocuments.push(...someDocuments.filter(doc => doc.titleAr.includes(body.search)))
+         // let elasticresult = await elastic.search(body.search)
+         // allDocuments = someDocuments.filter(doc => elasticresult.includes(doc._id.toString()))
+            allDocuments = someDocuments.filter(doc => doc.titleFr.toLowerCase().includes(body.search.toLowerCase()))
+            allDocuments.push(...someDocuments.filter(doc => doc.titleAr.includes(body.search)))
+          console.log(allDocuments.length)
         }
         else if (!body.exacte) {
-          let args = body.search.split(" ");
-          for (let word of args) {
-            if (word.length <= 3) continue;
-            //allDocuments.push(...someDocuments.filter(doc => doc.titleFr.toLowerCase().includes(word.toLowerCase())))
-            //allDocuments.push(...someDocuments.filter(doc => doc.titleAr.includes(word)))
-            allDocuments.push(...someDocuments.filter(doc => doc.titleFr.split(" ").join("").toLowerCase().includes(word.toLowerCase())))
-            allDocuments.push(...someDocuments.filter(doc => doc.titleAr.split(" ").join("").includes(word)))
-          }
+          let elasticresult = await elastic.search(body.search)
+          allDocuments = someDocuments.filter(doc => elasticresult.includes(doc._id.toString()))
+         // let args = body.search.split(" ");
+         // for (let word of args) {
+         //   if (word.length <= 2) continue;
+         //   allDocuments.push(...someDocuments.filter(doc => doc.titleFr.split(" ").join("").toLowerCase().includes(word.toLowerCase())))
+         //   allDocuments.push(...someDocuments.filter(doc => doc.titleAr.split(" ").join("").includes(word)))
+         //   console.log(allDocuments.length)
+         // }
         }
         let allSearchModules = await modules.find({});
         if (body.module) {
