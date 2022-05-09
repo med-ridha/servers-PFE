@@ -212,10 +212,6 @@ let documentDao = {
     let promise = new Promise(async (res, rej) => {
 
       let documentId = body.documentId;
-      if (!documentId) {
-        rej({ "result": "error", value: { code: 6, result: "missing values" } })
-        return
-      }
       try {
         let doc = await documents.findOne({ _id: documentId });
         if (!doc) {
@@ -299,7 +295,7 @@ let documentDao = {
         })).save()
           .then(async result => {
             await modulesDao.addDocToCat(moduleId, categoryId, result._id);
-            await elastic.addDocument(result);
+            await elastic.addDocToElastic(result);
             let mod = await modules.findOne({ _id: moduleId });
             await firebase.sendToTopic({ title: `Nouveau document ${mod.name}`, body: result.titleFr, id: result._id, module: mod.name, category: categoryName })
             res({
@@ -349,10 +345,6 @@ let documentDao = {
 
       try {
         let modP = await modulesDao.getModule(moduleNum);
-        if (modP.result == "error") {
-          rej({ result: "error", value: { code: 1, message: "module not found" } })
-          return;
-        }
 
         let mod = modP.value.message;
         moduleId = mod._id;
@@ -380,12 +372,10 @@ let documentDao = {
         }
 
         let updateResult = await documents.updateOne({ _id: docId }, data)
-        if (updateResult.modifiedCount == 1) {
-          let updateDocument = await documents.findOne({ _id: docId });
-          await elastic.addDocument(updateDocument);
-          await modulesDao.remDocFromCat(doc.moduleId, doc.categoryId, doc._id);
-          await modulesDao.addDocToCat(moduleId, categoryId, doc._id);
-        }
+        let updateDocument = await documents.findOne({ _id: docId });
+        await elastic.addDocToElastic(updateDocument);
+        await modulesDao.remDocFromCat(doc.moduleId, doc.categoryId, doc._id);
+        await modulesDao.addDocToCat(moduleId, categoryId, doc._id);
         res({ result: "success", value: { code: 0, message: JSON.stringify(updateResult) } })
 
       } catch (error) {
@@ -425,22 +415,22 @@ let documentDao = {
         }
         let allDocuments = [];
         if (body.exacte) {
-         // let elasticresult = await elastic.search(body.search)
-         // allDocuments = someDocuments.filter(doc => elasticresult.includes(doc._id.toString()))
-            allDocuments = someDocuments.filter(doc => doc.titleFr.toLowerCase().includes(body.search.toLowerCase()))
-            allDocuments.push(...someDocuments.filter(doc => doc.titleAr.includes(body.search)))
+          // let elasticresult = await elastic.search(body.search)
+          // allDocuments = someDocuments.filter(doc => elasticresult.includes(doc._id.toString()))
+          allDocuments = someDocuments.filter(doc => doc.titleFr.toLowerCase().includes(body.search.toLowerCase()))
+          allDocuments.push(...someDocuments.filter(doc => doc.titleAr.includes(body.search)))
           console.log(allDocuments.length)
         }
         else if (!body.exacte) {
           let elasticresult = await elastic.search(body.search)
           allDocuments = someDocuments.filter(doc => elasticresult.includes(doc._id.toString()))
-         // let args = body.search.split(" ");
-         // for (let word of args) {
-         //   if (word.length <= 2) continue;
-         //   allDocuments.push(...someDocuments.filter(doc => doc.titleFr.split(" ").join("").toLowerCase().includes(word.toLowerCase())))
-         //   allDocuments.push(...someDocuments.filter(doc => doc.titleAr.split(" ").join("").includes(word)))
-         //   console.log(allDocuments.length)
-         // }
+          // let args = body.search.split(" ");
+          // for (let word of args) {
+          //   if (word.length <= 2) continue;
+          //   allDocuments.push(...someDocuments.filter(doc => doc.titleFr.split(" ").join("").toLowerCase().includes(word.toLowerCase())))
+          //   allDocuments.push(...someDocuments.filter(doc => doc.titleAr.split(" ").join("").includes(word)))
+          //   console.log(allDocuments.length)
+          // }
         }
         let allSearchModules = await modules.find({});
         if (body.module) {

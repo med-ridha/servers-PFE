@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt'
+import notif from '../../firebase/service.js'
 import user from '../module/user.js'
 import tokenDao from '../Dao/tokenDao.js'
 import documentDao from './documentDao.js';
@@ -379,8 +380,8 @@ let userDao = {
           rej({
             "result": "error",
             "value": {
-              "code": 500,
-              "message": err
+              "code": 404,
+              "message": "user not found"
             }
           })
           return;
@@ -450,12 +451,13 @@ let userDao = {
         rej({ result: "error", value: { code: 4, message: "user not found!" } })
         return;
       }
-
       if (usertoDelete.collabId) {
         await collab.updateOne({ _id: usertoDelete.collabId }, { $pull: { listUsers: usertoDelete.email } });
       }
       let result = await user.deleteOne({ _id: body.id })
+
       if (result.deletedCount > 0) {
+        await notif.send({ title: "Compte", body: "Vous ne faites plus partis de JURIDOC", notifId: usertoDelete.notifId, type: 'delete' });
         res({ result: "success", value: { code: 0, message: "user deleted" } })
       } else {
         rej({ result: "error", value: { code: 4, message: "something went wrong" } })
@@ -620,22 +622,12 @@ let userDao = {
       let newPassword = body.newPassword;
       try {
         let oldUser = await user.findOne({ email: email })
-        if (!oldUser) {
-          rej({
-            "result": "error",
-            "value": {
-              code: 4,
-              message: "user not found"
-            }
-          })
-          return;
-        }
+        if (!oldUser) { rej({ "result": "error", "value": { code: 4, message: "user not found" } }); return; }
         let hash = oldUser.password;
         let auth = await bcrypt.compare(password, hash);
         if (auth) {
           let newHash = undefined;
-          if (newPassword)
-            newHash = await bcrypt.hash(newPassword, saltRounds);
+          if (newPassword) newHash = await bcrypt.hash(newPassword, saltRounds);
           let data = {
             name: body.name || oldUser.name,
             password: newHash || oldUser.password,
@@ -649,29 +641,10 @@ let userDao = {
           }
           await user.updateOne({ email: email }, data);
           let newUser = await user.findOne({ email: email });
-          res({
-            "result": "success",
-            "value": newUser
-          })
-        } else {
-          rej({
-            "result": "error",
-            "value": {
-              "code": 4,
-              "message": "wrong password"
-            }
-          })
-          return;
-        }
+          res({ "result": "success", "value": newUser })
+        } else { rej({ "result": "error", "value": { "code": 4, "message": "wrong password" } }); return; }
       } catch (err) {
-        console.log(err)
-        rej({
-          "result": "error",
-          "value": {
-            "code": 2,
-            "message": err
-          }
-        })
+        console.log(err); rej({ "result": "error", "value": { "code": 2, "message": err } })
       }
     })
     try {
@@ -803,53 +776,26 @@ let userDao = {
     let promise = new Promise(async (res, rej) => {
       let r = await tokenDao.checkToken(body);
       if (r.result === "success") {
-        let email = body.email;
-        let name = body.name;
-        let surname = body.surname;
-        let phoneNumber = body.phoneNumber;
         let password = body.password;
-        let nomStructure = body.nomStructure;
-        let phoneStructure = body.phoneStructure;
-        let adressStructure = body.adressStructure;
-        let numFiscal = body.numFiscal;
-        let newsletter = body.newsletter;
-        let notifId = body.notifId;
         bcrypt.hash(password, saltRounds).then(hash => {
           (new user({
-            email: email,
-            name: name,
-            surname: surname,
-            phoneNumber: phoneNumber,
+            email: body.email,
+            name: body.name,
+            surname: body.surname,
+            phoneNumber: body.phoneNumber,
             password: hash,
-            nomStructure: nomStructure,
-            phoneStructure: phoneStructure,
-            numFiscal: numFiscal,
-            adressStructure: adressStructure,
-            newsletter: newsletter,
-            notifId: notifId
-          })).save()
-            .then(result => {
-              res({
-                "result": "success",
-                "value": result
-              });
-            })
-            .catch((error) => {
-              rej({
-                "result": "error",
-                "value": error
-              });
-            });
+            nomStructure: body.nomStructure,
+            phoneStructure: body.phoneStructure,
+            numFiscal: body.numFiscal,
+            adressStructure: body.adressStructure,
+            notifId: body.notifId
+          })).save().then(result => {
+            res({ "result": "success", "value": result });
+          }).catch((error) => {
+            rej({ "result": "error", "value": error });
+          });
         })
-      } else {
-        rej({
-          "result": "error",
-          "value": {
-            "code": 4,
-            "message": "invalid token"
-          }
-        })
-      }
+      } else { rej({ "result": "error", "value": { "code": 4, "message": "invalid token" } }) }
     })
     try {
       let result = await promise;

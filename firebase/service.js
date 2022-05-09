@@ -15,28 +15,14 @@ let firebase = {
         title: data.title,
         body: data.body
       },
-     // android: {
-     //   notification: {
-     //     image: data.image,
-     //     channel_id: "com.example.juridoc"
-     //   }
-     // },
-     // apns: {
-     //   payload: {
-     //     aps: {
-     //       'mutable-content': 1
-     //     }
-     //   },
-     //   fcm_options: {
-     //     image: data.image
-     //   }
-     // },
-      //topic: 'new'
+      data: {
+        'type': data.type,
+      }
     };
-    let user = await users.findOne({email: data.email})
-    let r = await admin.messaging().sendToDevice(user.notifId, message);
+    let r = await admin.messaging().sendToDevice(data.notifId, message);
     console.log(r);
   },
+
   sendToTopic: async function(data) {
     let message = {
       notification: {

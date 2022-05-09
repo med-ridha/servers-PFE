@@ -12,7 +12,7 @@ let elastic = {
     console.log(result);
   },
 
-  addDocument: async function(document) {
+  addDocToElastic: async function(document) {
     if (document._id === undefined) return;
     await client.indices.refresh({ index: 'documents' })
     const result = await client.index({

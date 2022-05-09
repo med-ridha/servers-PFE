@@ -64,17 +64,6 @@ let abonnDao = {
     let promise = new Promise(async (res, rej) => {
       let userEmail = body.email;
       try {
-        let user = await users.findOne({ email: userEmail });
-        if (!user) {
-          rej({
-            result: "error",
-            value: {
-              code: 4,
-              message: "user not found"
-            }
-          })
-          return;
-        }
         let duree = body.duree;
 
         (new abonn({
