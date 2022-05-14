@@ -42,11 +42,11 @@ function authenticateToken(req, res, next) {
 }
 
 
-app.get("/feedElastic/:search", async (req, res) => {
-  let result = await elastic.search(req.params.search);
-  console.log(result)
-  res.json({ "res": result });
-})
+// app.get("/feedElastic/:search", async (req, res) => {
+//   let result = await elastic.search(req.params.search);
+//   console.log(result)
+//   res.json({ "res": result });
+// })
 
 app.post("/notification/sendToTopic", async (req, res) => {
   let result = await firebase.sendToTopic(req.body);

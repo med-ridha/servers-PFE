@@ -63,9 +63,8 @@ let abonnDao = {
   createAbonn: async function(body) {
     let promise = new Promise(async (res, rej) => {
       let userEmail = body.email;
+      let duree = body.duree;
       try {
-        let duree = body.duree;
-
         (new abonn({
           email: userEmail,
           modules: body.modules.substring(1, body.modules.length - 1).split(",").map(item => item.trim()),
@@ -75,26 +74,13 @@ let abonnDao = {
         })).save().then(async (result) => {
           await users.updateOne({ email: userEmail }, { $push: { abonnement: result._id } })
           let finalResult = await users.findOne({ email: userEmail });
-          res({
-            result: "success",
-            value: {
-              code: 0,
-              message: finalResult.abonnement,
-            }
-          })
-        }).catch()
+          res({ result: "success", value: { code: 0, message: finalResult.abonnement, } })
+        }).catch(error => rej({ result: "error", value: { code: 0, message: error, } }))
       } catch (error) {
         console.log(error);
-        rej({
-          result: "error",
-          value: {
-            code: 5,
-            message: JSON.stringify(error)
-          }
-        })
+        rej({ result: "error", value: { code: 5, message: JSON.stringify(error) } })
       }
     })
-
     try {
       let result = await promise;
       return result;

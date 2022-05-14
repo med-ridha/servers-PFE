@@ -245,7 +245,7 @@ app.post("/updateUser", async (req, res) => {
 })
 
 app.post("/addToCollab", async (req, res) => {
-  let result = await userDao.addToCollab(req.body)
+  let result = await collabDao.addToCollab(req.body)
   if (result.result === "success") {
     res.status(200).json(result.value)
   } else if (result.value.code === 5) {
