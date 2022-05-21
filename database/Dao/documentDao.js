@@ -38,23 +38,6 @@ let documentDao = {
       return err;
     }
   },
-  getSearchHAll: async function() {
-    let promise = new Promise(async (res, rej) => {
-      try {
-        let searches = await searchModule.find({});
-        res({ "result": 'success', value: { code: 0, message: searches } })
-      } catch (error) {
-        console.log(error);
-        rej({ "result": "error", "value": { code: 1, message: error } })
-      }
-    })
-    try {
-      let result = await promise;
-      return result;
-    } catch (err) {
-      return err;
-    }
-  },
 
   checkDocument: async function(body) {
     let titleFr = body.titleFr ?? null;

@@ -17,31 +17,31 @@ let tokenDao = {
         dateExpo: moment.now() + 21600000 // 6 hours
       })).save()
         .then(async result => {
-          // let transporter = nodemailer.createTransport({
-          //     host: "smtp-relay.sendinblue.com",
-          //     port: 587,
-          //     secure: false,
-          //     auth: {
-          //         user: process.env.SMTP_EMAIL,
-          //         pass: process.env.SMTP_AUTH
-          //     },
-          //     tls: {
-          //         rejectUnauthorized: false
-          //     }
-          // })
-          // let mailOptions = {
-          //     from: '"zarga" <ridha.zemzem24@gmail.com>', // sender address
-          //     to: email, // list of receivers
-          //     subject: "token", // Subject line
-          //     text: result.token, // plain text body
-          //     html: `<b>${result.token}</b>`, // html body
-          // }
-          // try {
-          //     let info = await transporter.sendMail(mailOptions);
-          //     console.log("Message send" + info.messageId)
-          // } catch (err) {
-          //     console.log("message not sent " + err)
-          // }
+           let transporter = nodemailer.createTransport({
+               host: "smtp-relay.sendinblue.com",
+               port: 587,
+               secure: false,
+               auth: {
+                   user: process.env.SMTP_EMAIL,
+                   pass: process.env.SMTP_AUTH
+               },
+               tls: {
+                   rejectUnauthorized: false
+               }
+           })
+           let mailOptions = {
+               from: '"JURIDOCTN" <ridha.zemzem24@gmail.com>', // sender address
+               to: email, // list of receivers
+               subject: "token", // Subject line
+               text: result.token, // plain text body
+               html: `<b>voici votre code: ${result.token}</b>`, // html body
+           }
+           try {
+               let info = await transporter.sendMail(mailOptions);
+               console.log("Message send" + info.messageId)
+           } catch (err) {
+               console.log("message not sent " + err)
+           }
           console.log(result.token);
           res(result)
         })

@@ -3,8 +3,15 @@ import user from '../module/user.js';
 import moment from 'moment'
 
 let collabDao = {
-  getCollabs: async function(collabId) {
+  getUserCollabs: async function(collabId) {
     let promise = new Promise(async (res, rej) => {
+      if (collabId == 'null'){ 
+        rej({
+          "result": "error",
+          "value": "collabId null" 
+        });
+        return;
+      }
       try {
         let collabs = await collab.findOne({ _id: collabId });
         let listUsers = collabs.listUsers;
@@ -33,6 +40,7 @@ let collabDao = {
             "listFavored": bulkData[i].listfavored
           }
         }
+        console.log(data);
         res({
           "result": "success",
           "value": {
@@ -44,6 +52,7 @@ let collabDao = {
           }
         })
       } catch (err) {
+        console.log(err);
         rej({
           "result": "error",
           "value": err
@@ -134,38 +143,6 @@ let collabDao = {
       return err;
     }
   },
-  deleteUserCollab: async function(userToDelete, emailToDelete, collabId) {
-    let promise = new Promise(async (res, rej) => {
-      try {
-        await user.updateOne({ _id: userToDelete._id }, { $set: { collabId: null } })
-        await collab.updateOne({ _id: collabId }, { $pull: { listUsers: emailToDelete } });
-        res({
-          result: "success",
-          value: {
-            code: 0,
-            message: "deleted from collab"
-          }
-        })
-
-      } catch (error) {
-        console.log(error)
-        rej({
-          result: "error",
-          value: {
-            code: 1,
-            message: JSON.stringify(error)
-          }
-        })
-      }
-    })
-    try {
-      let result = await promise;
-      return result;
-    } catch (err) {
-      return err;
-    }
-  },
-
 
 
   createCollab: async function(body) {

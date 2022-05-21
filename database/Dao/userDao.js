@@ -29,25 +29,9 @@ let userDao = {
       }
 
       let collabId = thisUser.collabId;
-      let result = await collabDao.deleteUserCollab(userToDelete, emailToDelete, collabId);
-      if (result.result === "success") {
-        res({
-          result: "success",
-          value: {
-            code: 0,
-            message: "deleted from collab"
-          }
-        })
-      } else {
-        rej({
-          result: "error",
-          value: {
-            code: 3,
-            message: "something went wrong"
-          }
-        })
-        return;
-      }
+      await user.updateOne({ _id: userToDelete._id }, { $set: { collabId: null } })
+      await collab.updateOne({ _id: collabId }, { $pull: { listUsers: emailToDelete } });
+      res({ result: "success", value: { code: 0, message: "deleted from collab" } })
     })
     try {
       let result = await promise;
@@ -83,7 +67,7 @@ let userDao = {
           })
           return;
         }
-        let collab = await collabDao.getCollabs(collabId);
+        let collab = await collabDao.getUserCollabs(collabId);
         if (collab.result === "success") {
           res({
             "result": "success",
@@ -199,49 +183,8 @@ let userDao = {
     }
   },
 
-  getSearchH: async function(id) {
-    let promise = new Promise(async (res, rej) => {
-      let searchH = [];
-      try {
-        let oneUser = await user.findOne({ _id: id })
-        if (!oneUser) {
-          rej({
-            "result": "error",
-            "value": {
-              "code": 404,
-              "message": "user not found"
-            }
-          })
-          return;
-        }
-        searchH = await search.find({ email: oneUser.email });
-        res({
-          "result": "success",
-          "value": {
-            "code": 0,
-            "message": searchH
-          }
-        })
-      } catch (error) {
-        rej({
-          "result": "error",
-          "value": {
-            "code": 500,
-            "message": error
-          }
-        })
-        return;
-      }
-    })
-    try {
-      let result = await promise;
-      return result;
-    } catch (err) {
-      return err;
-    }
-  },
 
-  getDocumentFavored: async function(email) {
+  getUserFavorit: async function(email) {
     let promise = new Promise(async (res, rej) => {
       try {
         let oneUser = await user.findOne({ email: email });
@@ -257,8 +200,6 @@ let userDao = {
         }
         let listFavored = oneUser.listfavored;
         let docFavored = await documents.find({ _id: { $in: listFavored } })
-
-
         res({
           "result": "success",
           "value": {
@@ -266,13 +207,12 @@ let userDao = {
             "message": docFavored
           }
         })
-
       } catch (error) {
         rej({
           "result": "error",
           "value": {
             "code": 500,
-            "message": err
+            "message": error
           }
         })
         return;
@@ -328,7 +268,7 @@ let userDao = {
     }
   },
 
-  getOne: async function(id) {
+  getUser: async function(id) {
     let promise = new Promise(async (res, rej) => {
       try {
         let _user = await user.findOne({ _id: id });
@@ -784,7 +724,7 @@ let userDao = {
     }
   },
 
-  removeDocFromFav: async function(body) {
+  deleteFavorite: async function(body) {
     let promise = new Promise(async (res, rej) => {
       let email = body.email;
       let docId = body.documentId;

@@ -3,7 +3,7 @@ import abonn from '../module/abonnements.js';
 import users from '../module/user.js';
 
 let abonnDao = {
-  getAbonn: async function(email) {
+  getUserAbonn: async function(email) {
     let promise = new Promise(async (res, rej) => {
       try {
         let user = await users.findOne({ email: email });

@@ -13,7 +13,7 @@ app.use(express.json());
 let PORT = process.env.PORT || 3000;
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`app server listening on PORT ${PORT}`);
+  console.log(`app PORT ${PORT}`);
 })
 
 app.get('/', (_, res) => {
@@ -33,6 +33,7 @@ app.post('/users/check', async (req, res) => {
     res.status(500).json(result.value.message);
   }
 })
+
 app.get('/documents/search', async (req, res) => {
   let result = await documentDao.search(req.query);
   if (result.result == "success") {
@@ -41,8 +42,6 @@ app.get('/documents/search', async (req, res) => {
     res.status(500).json(result.value);
   }
 })
-
-
 
 app.post('/modules/cat/latest/:duree', async (req, res) => {
   let result = await modulesDao.getCategoriesLatest(req.params.duree, req.body);
@@ -75,7 +74,7 @@ app.get("/users/getListFavored/:email", async (req, res) => {
 })
 
 app.post("/documents/removeFromFavorite", async (req, res) => {
-  let result = await userDao.removeDocFromFav(req.body)
+  let result = await userDao.deleteFavorite(req.body)
   if (result.result === "success") {
     res.status(200).json(result.value)
   } else {
@@ -269,7 +268,7 @@ app.post("/createCollab", async (req, res) => {
 })
 
 app.get("/users/abonns/:email", async (req, res) => {
-  let result = await abonnDao.getAbonn(req.params.email);
+  let result = await abonnDao.getUserAbonn(req.params.email);
   if (result.result === "success") {
     res.status(200).json(result.value);
   } else {

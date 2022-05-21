@@ -6,6 +6,7 @@ import path from 'path'
 import cors from 'cors'
 import userDao from '../database/Dao/userDao.js';
 import documentDao from '../database/Dao/documentDao.js'
+import searchDao from '../database/Dao/searchDao.js'
 import modulesDao from '../database/Dao/moduleDao.js'
 import collabDao from '../database/Dao/collabDao.js'
 import abonnDao from '../database/Dao/abonnDao.js'
@@ -25,7 +26,7 @@ app.use((_, res, next) => {
 let PORT = process.env.ADMINPORT || 1337;
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`admin server listening on PORT ${PORT}`);
+  console.log(`admin PORT ${PORT}`);
 })
 
 function authenticateToken(req, res, next) {
@@ -114,7 +115,7 @@ app.get('/documents/one/:id', authenticateToken, async (req, res) => {
 })
 
 app.get('/users/one/abonn/:email', authenticateToken, async (req, res) => {
-  let result = await abonnDao.getAbonn(req.params.email);
+  let result = await abonnDao.getUserAbonn(req.params.email);
   if (result.result = "success") {
     res.status(200).json(result.value);
   } else {
@@ -123,7 +124,7 @@ app.get('/users/one/abonn/:email', authenticateToken, async (req, res) => {
 })
 
 app.get('/users/one/favorit/:email', authenticateToken, async (req, res) => {
-  let result = await userDao.getDocumentFavored(req.params.email);
+  let result = await userDao.getUserFavorit(req.params.email);
   if (result.result = "success") {
     res.status(200).json(result.value);
   } else {
@@ -132,7 +133,7 @@ app.get('/users/one/favorit/:email', authenticateToken, async (req, res) => {
 })
 
 app.get('/users/one/collabs/:email', authenticateToken, async (req, res) => {
-  let result = await collabDao.getCollabs(req.params.email);
+  let result = await collabDao.getUserCollabs(req.params.email);
   if (result.result = "success") {
     res.status(200).json(result.value);
   } else {
@@ -141,7 +142,7 @@ app.get('/users/one/collabs/:email', authenticateToken, async (req, res) => {
 })
 
 app.get('/users/one/searchH/:id', authenticateToken, async (req, res) => {
-  let result = await userDao.getSearchH(req.params.id);
+  let result = await searchDao.getUserSearchH(req.params.id);
   if (result.result = "success") {
     res.status(200).json(result.value);
   } else {
@@ -150,7 +151,7 @@ app.get('/users/one/searchH/:id', authenticateToken, async (req, res) => {
 })
 
 app.get('/users/one/:id', authenticateToken, async (req, res) => {
-  let result = await userDao.getOne(req.params.id);
+  let result = await userDao.getUser(req.params.id);
   if (result.result = "success") {
     res.status(200).json(result.value);
   } else {
@@ -200,7 +201,7 @@ app.put('/documents/update', authenticateToken, async (req, res) => {
 })
 
 app.get('/search/all', authenticateToken, async (_, res) => {
-  let result = await documentDao.getSearchHAll();
+  let result = await searchDao.getAllSearch();
   if (result.result = "success") {
     res.status(200).json(result.value);
   } else {
